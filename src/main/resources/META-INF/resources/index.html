@@ -104,6 +104,9 @@
         <!-- <div class="row g-4"> -->
         <div class="row row-cols-auto g-4">
 
+
+            <!-- #region Aatrox카드 영역 -->
+
             <!-- Aatrox -->
             <!-- <div class="col-md-6 col-lg-4 col-xl-2">
                 <div class="card text-center h-100">
@@ -161,7 +164,10 @@
 </div>
 </div>
 </div>
+<!-- #endregion -->
 
+
+            <!-- #region Sylas카드 영역 -->
             <!-- Sylas
             <div class="col-md-6 col-lg-4 col-xl-2">
                 <div class="card text-center h-100">
@@ -219,7 +225,10 @@
 </div>
 </div>
 </div>
+<!-- #endregion -->
 
+
+            <!-- #region Anivia카드 영역 -->
             <!-- Anivia
             <div class="col-md-6 col-lg-4 col-xl-2">
                 <div class="card text-center h-100">
@@ -277,7 +286,10 @@
 </div>
 </div>
 </div>
+<!-- #endregion -->
 
+
+            <!-- #region Briar카드 영역 -->
             <!-- Briar
             <div class="col-md-6 col-lg-4 col-xl-2">
                 <div class="card text-center h-100">
@@ -335,8 +347,11 @@
 </div>
 </div>
 </div>
+<!-- #endregion -->
 
-            <!-- Jax -->
+
+            <!-- #region Jax카드 영역 -->
+            <!-- Jax
             <div class="col-md-6 col-lg-4 col-xl-2">
                 <div class="card text-center h-100">
                     <img src="https://ddragon.leagueoflegends.com/cdn/15.24.1/img/champion/Jax.png" class="card-img-top" alt="Jax" loading="lazy">
@@ -345,8 +360,59 @@
                         <p class="card-text">대장간의 주인!</p>
                     </div>
                 </div>
+            </div> -->
+
+            <!-- Jax -->
+            <div class="col">
+                <div class="card bg-dark text-white border-secondary h-100">
+                    <img src="image/Jax images.jpg" class="card-img-top" alt="잭스">
+                    <div class="card-body">
+                        <h5 class="card-title">잭스 (Jax)</h5>
+                        <p class="card-text small">역할: 전사 / 난이도: 중</p>
+                    </div>
+                    <div class="card-footer bg-transparent border-0">
+                        <button class="btn btn-outline-light w-100" 
+                        data-bs-toggle="modal" 
+                        data-bs-target="#modalJax" 
+                        data-champ="Jax">
+                        상세 보기
+                    </button>
+                </div>
             </div>
-            <!-- Jinx -->
+        </div>            
+            
+        <!-- 모달 (iframe으로 Jax.html 불러오기) -->
+         <div class="modal fade" id="modalJax" tabindex="-1" aria-labelledby="modalBriarLabel" aria-hidden="true">
+            <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content bg-dark text-white border-secondary">
+                    <!-- 헤더 -->
+                     <div class="modal-header border-secondary">
+                        <h5 class="modal-title" id="modalJaxLabel">잭스 (Jax) 상세 정보</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    
+        <!-- 바디: iframe으로 내용 채움 -->
+         <div class="modal-body p-0" style="height: 65vh; background: #0a0e17;">
+            <iframe
+            src="modals/Jax.html"
+            frameborder="0"
+            style="width: 100%; height: 100%; border: none;"
+            allowfullscreen>
+        </iframe>
+    </div>
+    
+    <!-- 푸터 -->
+     <div class="modal-footer border-secondary">
+        <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">닫기</button>
+    </div>
+</div>
+</div>
+</div>
+<!-- #endregion -->
+
+
+            <!-- #region Jinx카드 영역 -->
+            <!-- Jinx
             <div class="col-md-6 col-lg-4 col-xl-2">
                 <div class="card text-center h-100">
                     <img src="https://ddragon.leagueoflegends.com/cdn/15.24.1/img/champion/Jinx.png" class="card-img-top" alt="Jinx" loading="lazy">
@@ -357,7 +423,378 @@
                 </div>
             </div>
         </div>
-    </section>
+    </section> -->
+
+
+            <!-- Jinx -->
+            <div class="col">
+                <div class="card bg-dark text-white border-secondary h-100">
+                    <img src="image/Jinx images.jpg" class="card-img-top" alt="잭스">
+                    <div class="card-body">
+                        <h5 class="card-title">징크스 (Jinx)</h5>
+                        <p class="card-text small">역할: 원딜 / 난이도: 중</p>
+                    </div>
+                    <div class="card-footer bg-transparent border-0">
+                        <button class="btn btn-outline-light w-100" 
+                        data-bs-toggle="modal" 
+                        data-bs-target="#modalJinx" 
+                        data-champ="Jinx">
+                        상세 보기
+                    </button>
+                </div>
+            </div>
+        </div>            
+            
+        <!-- 모달 (iframe으로 Jinx.html 불러오기) -->
+         <div class="modal fade" id="modalJinx" tabindex="-1" aria-labelledby="modalBriarLabel" aria-hidden="true">
+            <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content bg-dark text-white border-secondary">
+                    <!-- 헤더 -->
+                     <div class="modal-header border-secondary">
+                        <h5 class="modal-title" id="modalJinxLabel">징크스 (Jinx) 상세 정보</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    
+        <!-- 바디: iframe으로 내용 채움 -->
+         <div class="modal-body p-0" style="height: 65vh; background: #0a0e17;">
+            <iframe
+            src="modals/Jinx.html"
+            frameborder="0"
+            style="width: 100%; height: 100%; border: none;"
+            allowfullscreen>
+        </iframe>
+    </div>
+    
+    <!-- 푸터 -->
+     <div class="modal-footer border-secondary">
+        <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">닫기</button>
+    </div>
+</div>
+</div>
+</div>
+<!-- #endregion -->
+
+
+            <!-- #region Kennen카드 영역 -->
+            <!-- Kennen
+            <div class="col-md-6 col-lg-4 col-xl-2">
+                <div class="card text-center h-100">
+                    <img src="https://ddragon.leagueoflegends.com/cdn/15.24.1/img/champion/Jinx.png" class="card-img-top" alt="Jinx" loading="lazy">
+                    <div class="card-body">
+                        <h5 class="card-title accent-purple">Kennen (탑))</h5>
+                        <p class="card-text">폭풍의 심장.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section> -->
+
+    
+            <!-- Kennen -->
+            <div class="col">
+                <div class="card bg-dark text-white border-secondary h-100">
+                    <img src="image/Kennen images.jpg" class="card-img-top" alt="잭스">
+                    <div class="card-body">
+                        <h5 class="card-title">케넨 (Kennen)</h5>
+                        <p class="card-text small">역할: 마법사 / 난이도: 중</p>
+                    </div>
+                    <div class="card-footer bg-transparent border-0">
+                        <button class="btn btn-outline-light w-100" 
+                        data-bs-toggle="modal" 
+                        data-bs-target="#modalKennen" 
+                        data-champ="Kennen">
+                        상세 보기
+                    </button>
+                </div>
+            </div>
+        </div>            
+            
+        <!-- 모달 (iframe으로 Kennen.html 불러오기) -->
+         <div class="modal fade" id="modalKennen" tabindex="-1" aria-labelledby="modalBriarLabel" aria-hidden="true">
+            <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content bg-dark text-white border-secondary">
+                    <!-- 헤더 -->
+                     <div class="modal-header border-secondary">
+                        <h5 class="modal-title" id="modalKennenLabel">케넨 (Kennen) 상세 정보</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    
+        <!-- 바디: iframe으로 내용 채움 -->
+         <div class="modal-body p-0" style="height: 65vh; background: #0a0e17;">
+            <iframe
+            src="modals/Kennen.html"
+            frameborder="0"
+            style="width: 100%; height: 100%; border: none;"
+            allowfullscreen>
+        </iframe>
+    </div>
+    
+    <!-- 푸터 -->
+     <div class="modal-footer border-secondary">
+        <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">닫기</button>
+    </div>
+</div>
+</div>
+</div>
+<!-- #endregion -->
+
+
+            <!-- #region Kled카드 영역 -->
+            <!-- Kled
+            <div class="col-md-6 col-lg-4 col-xl-2">
+                <div class="card text-center h-100">
+                    <img src="https://ddragon.leagueoflegends.com/cdn/15.24.1/img/champion/Jinx.png" class="card-img-top" alt="Jinx" loading="lazy">
+                    <div class="card-body">
+                        <h5 class="card-title accent-purple">Kled (탑))</h5>
+                        <p class="card-text">망나니 기사.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section> -->
+
+    
+            <!-- Kled -->
+            <div class="col">
+                <div class="card bg-dark text-white border-secondary h-100">
+                    <img src="image/Kled images.jpg" class="card-img-top" alt="잭스">
+                    <div class="card-body">
+                        <h5 class="card-title">클레드 (Kled)</h5>
+                        <p class="card-text small">역할: 전사 / 난이도: 중</p>
+                    </div>
+                    <div class="card-footer bg-transparent border-0">
+                        <button class="btn btn-outline-light w-100" 
+                        data-bs-toggle="modal" 
+                        data-bs-target="#modalKled" 
+                        data-champ="Kled">
+                        상세 보기
+                    </button>
+                </div>
+            </div>
+        </div>            
+            
+        <!-- 모달 (iframe으로 Kled.html 불러오기) -->
+         <div class="modal fade" id="modalKled" tabindex="-1" aria-labelledby="modalBriarLabel" aria-hidden="true">
+            <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content bg-dark text-white border-secondary">
+                    <!-- 헤더 -->
+                     <div class="modal-header border-secondary">
+                        <h5 class="modal-title" id="modalKledLabel">클레드 (Kled) 상세 정보</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    
+        <!-- 바디: iframe으로 내용 채움 -->
+         <div class="modal-body p-0" style="height: 65vh; background: #0a0e17;">
+            <iframe
+            src="modals/Kled.html"
+            frameborder="0"
+            style="width: 100%; height: 100%; border: none;"
+            allowfullscreen>
+        </iframe>
+    </div>
+    
+    <!-- 푸터 -->
+     <div class="modal-footer border-secondary">
+        <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">닫기</button>
+    </div>
+</div>
+</div>
+</div>
+ <!-- #endregion -->
+
+
+            <!-- #region Yunara카드 영역 -->
+            <!-- Yunara
+            <div class="col-md-6 col-lg-4 col-xl-2">
+                <div class="card text-center h-100">
+                    <img src="https://ddragon.leagueoflegends.com/cdn/15.24.1/img/champion/Jinx.png" class="card-img-top" alt="Jinx" loading="lazy">
+                    <div class="card-body">
+                        <h5 class="card-title accent-purple">Yunara (원딜))</h5>
+                        <p class="card-text">꺽이지 않는 신념</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section> -->
+
+    
+            <!-- Yunara -->
+            <div class="col">
+                <div class="card bg-dark text-white border-secondary h-100">
+                    <img src="image/Yunara images.jpg" class="card-img-top" alt="잭스">
+                    <div class="card-body">
+                        <h5 class="card-title">유나라 (Yunara)</h5>
+                        <p class="card-text small">역할: 원딜 / 난이도: 중</p>
+                    </div>
+                    <div class="card-footer bg-transparent border-0">
+                        <button class="btn btn-outline-light w-100" 
+                        data-bs-toggle="modal" 
+                        data-bs-target="#modalYunara" 
+                        data-champ="Yunara">
+                        상세 보기
+                    </button>
+                </div>
+            </div>
+        </div>            
+            
+        <!-- 모달 (iframe으로 Yunara.html 불러오기) -->
+         <div class="modal fade" id="modalYunara" tabindex="-1" aria-labelledby="modalBriarLabel" aria-hidden="true">
+            <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content bg-dark text-white border-secondary">
+                    <!-- 헤더 -->
+                     <div class="modal-header border-secondary">
+                        <h5 class="modal-title" id="modalYunaraLabel">유나라 (Yunara) 상세 정보</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    
+        <!-- 바디: iframe으로 내용 채움 -->
+         <div class="modal-body p-0" style="height: 65vh; background: #0a0e17;">
+            <iframe
+            src="modals/Yunara.html"
+            frameborder="0"
+            style="width: 100%; height: 100%; border: none;"
+            allowfullscreen>
+        </iframe>
+    </div>
+    
+    <!-- 푸터 -->
+     <div class="modal-footer border-secondary">
+        <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">닫기</button>
+    </div>
+</div>
+</div>
+</div>
+<!-- #endregion -->
+
+
+            <!-- #region Aurelion Sol카드 영역 -->
+            <!-- Aurelion Sol
+            <div class="col-md-6 col-lg-4 col-xl-2">
+                <div class="card text-center h-100">
+                    <img src="https://ddragon.leagueoflegends.com/cdn/15.24.1/img/champion/Jinx.png" class="card-img-top" alt="Jinx" loading="lazy">
+                    <div class="card-body">
+                        <h5 class="card-title accent-purple">Aurelion Sol (미드))</h5>
+                        <p class="card-text">별의 창조자</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section> -->
+
+    
+            <!-- Aurelion Sol -->
+            <div class="col">
+                <div class="card bg-dark text-white border-secondary h-100">
+                    <img src="image/Aurelion Sol images.jpg" class="card-img-top" alt="잭스">
+                    <div class="card-body">
+                        <h5 class="card-title">아우렐리온 솔 (Aurelion Sol)</h5>
+                        <p class="card-text small">역할: 마법사 / 난이도: 중</p>
+                    </div>
+                    <div class="card-footer bg-transparent border-0">
+                        <button class="btn btn-outline-light w-100" 
+                        data-bs-toggle="modal" 
+                        data-bs-target="#modalAurelion Sol" 
+                        data-champ="Aurelion Sol">
+                        상세 보기
+                    </button>
+                </div>
+            </div>
+        </div>            
+            
+        <!-- 모달 (iframe으로 Aurelion Sol.html 불러오기) -->
+         <div class="modal fade" id="modalAurelion Sol" tabindex="-1" aria-labelledby="modalBriarLabel" aria-hidden="true">
+            <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content bg-dark text-white border-secondary">
+                    <!-- 헤더 -->
+                     <div class="modal-header border-secondary">
+                        <h5 class="modal-title" id="modalAurelion SolLabel">아우렐리온 솔 (Aurelion Sol) 상세 정보</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    
+        <!-- 바디: iframe으로 내용 채움 -->
+         <div class="modal-body p-0" style="height: 65vh; background: #0a0e17;">
+            <iframe
+            src="modals/Aurelion Sol.html"
+            frameborder="0"
+            style="width: 100%; height: 100%; border: none;"
+            allowfullscreen>
+        </iframe>
+    </div>
+    
+    <!-- 푸터 -->
+     <div class="modal-footer border-secondary">
+        <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">닫기</button>
+    </div>
+</div>
+</div>
+</div>
+<!-- #endregion -->
+
+
+            <!-- #region Leona카드 영역 -->
+            <!-- Leona
+            <div class="col-md-6 col-lg-4 col-xl-2">
+                <div class="card text-center h-100">
+                    <img src="https://ddragon.leagueoflegends.com/cdn/15.24.1/img/champion/Jinx.png" class="card-img-top" alt="Jinx" loading="lazy">
+                    <div class="card-body">
+                        <h5 class="card-title accent-purple">Leona (서포터))</h5>
+                        <p class="card-text">여명의 빛</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section> -->
+
+    
+            <!-- Leonal -->
+            <div class="col">
+                <div class="card bg-dark text-white border-secondary h-100">
+                    <img src="image/Leona images.jpg" class="card-img-top" alt="잭스">
+                    <div class="card-body">
+                        <h5 class="card-title">레오나 (Leona)</h5>
+                        <p class="card-text small">역할: 서포터 / 난이도: 중</p>
+                    </div>
+                    <div class="card-footer bg-transparent border-0">
+                        <button class="btn btn-outline-light w-100" 
+                        data-bs-toggle="modal" 
+                        data-bs-target="#modalLeona" 
+                        data-champ="Leona">
+                        상세 보기
+                    </button>
+                </div>
+            </div>
+        </div>            
+            
+        <!-- 모달 (iframe으로 Leona.html 불러오기) -->
+         <div class="modal fade" id="modalLeona" tabindex="-1" aria-labelledby="modalBriarLabel" aria-hidden="true">
+            <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content bg-dark text-white border-secondary">
+                    <!-- 헤더 -->
+                     <div class="modal-header border-secondary">
+                        <h5 class="modal-title" id="modalLeonaLabel">레오나 (Leona) 상세 정보</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    
+        <!-- 바디: iframe으로 내용 채움 -->
+         <div class="modal-body p-0" style="height: 65vh; background: #0a0e17;">
+            <iframe
+            src="modals/Leona.html"
+            frameborder="0"
+            style="width: 100%; height: 100%; border: none;"
+            allowfullscreen>
+        </iframe>
+    </div>
+    
+    <!-- 푸터 -->
+     <div class="modal-footer border-secondary">
+        <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">닫기</button>
+    </div>
+</div>
+</div>
+</div>
+<!-- #endregion -->
+
+
 
     <!-- 뉴스 섹션 (기존 유지) -->
     <section class="container my-5">
