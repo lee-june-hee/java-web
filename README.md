@@ -2,6 +2,8 @@
 
 매 주 수업 내용을 정리하자.
 
+<details>
+<summary>중간고사 내용</summary>
 ## 2, 3주차 수업 내용
 실습 1 : 쿼크스 환경 구축 및 준비 완료!
 실습 2 : HTML 기본 및 LOL 메인 화면 개발 완료!
@@ -298,3 +300,399 @@ PART 2
 • 이벤트 연결은 addEventListener()가 가장 권장
 • 배열 = 여러 값 저장, 객체 배열 = 복잡한 데이터 목록
 • LOL 검색 기능 = 검색어 처리 → filter → DOM 생성 → 화면 전환
+
+</details>
+
+
+## 9주차 수업 내용 정리
+## 라이트 모드 CSS
+
+아래 코드는 `body` 태그에 `light-mode` 클래스가 적용되었을 때  
+페이지 전체 배경, 네비게이션 바, hero 영역, 카드, 버튼 색상을 밝은 테마로 변경하는 CSS이다.
+
+### 기능 설명
+- 토글 버튼의 글자 크기와 색상을 설정
+- 라이트 모드일 때 페이지 전체 배경색과 글자색 변경
+- navbar 배경색과 메뉴 글자색 변경
+- hero 영역 배경을 밝은 그라데이션으로 변경
+- card 배경색, 제목색, 본문색, 테두리 변경
+
+### 코드
+```css
+/* ── [추가] 테마 토글 버튼 (폰트 크기, 색상 등 ) ──────────────── */
+
+/* 기본 다크 모드에서 토글 버튼 글자 크기와 색상 */
+#themeToggleBtn {
+    font-size: 1.1rem;
+    color: #fff;
+}
+/* 라이트 모드가 되면 토글 버튼 글자색을 어둡게 변경 */
+body.light-mode #themeToggleBtn {
+    color: #212529;
+}
+
+/* ── [추가] 라이트 모드 (다양한 색상 정보 ─────────────────────── */
+
+/* 페이지 전체 배경과 기본 글자색 변경 */
+body.light-mode {
+    background-color: #f8f9fa;
+    color: #212529;
+}
+/* navbar 배경색 변경 */
+body.light-mode .navbar {
+    background-color: #e9ecef !important;
+}
+/* navbar 안 브랜드명, 링크 글자색 변경 */
+body.light-mode .navbar .navbar-brand,
+body.light-mode .navbar .nav-link {
+    color: #212529 !important;
+}
+/* hero 영역 배경을 밝은 그라데이션으로 변경 */
+body.light-mode .hero {
+    background: linear-gradient(to bottom, #dce3ea, #f8f9fa);
+}
+/* 카드 전체 배경, 글자색, 테두리 변경 */
+body.light-mode .card {
+    background-color: #ffffff;
+    color: #212529;
+    border: 1px solid #dee2e6;
+}
+/* 카드 제목 색 변경 */
+body.light-mode .card-title {
+    color: #212529;
+}
+/* 카드 본문 글자색 변경 */
+body.light-mode .card-text {
+    color: #555;
+}
+```
+
+### 동작 방식
+이 코드는 JavaScript에서 `body`에 `light-mode` 클래스를 추가했을 때 적용된다.  
+즉, JavaScript가 `body.classList.toggle('light-mode')`를 실행하면  
+위 CSS가 활성화되어 다크 모드와 라이트 모드가 전환된다.
+
+---
+
+## 다크/라이트 모드 토글 JavaScript
+
+아래 코드는 버튼 클릭 시 `body` 태그에 `light-mode` 클래스를 추가하거나 제거하여  
+다크 모드와 라이트 모드를 전환하는 JavaScript이다.
+
+### 기능 설명
+- `body`에 `light-mode` 클래스 추가 / 제거
+- 토글 버튼 글자를 `DARK` / `LIGHT`로 변경
+- navbar의 Bootstrap 클래스를 다크 모드 / 라이트 모드에 맞게 변경
+- CSS의 `body.light-mode` 규칙이 적용되도록 연결
+
+### 코드
+```javascript
+// [추가] 다크/라이트 모드 토글 JavaScript
+function toggleTheme() {
+    const body = document.body;
+    const btn = document.getElementById('themeToggleBtn');
+    const navbar = document.querySelector('.navbar');
+
+    body.classList.toggle('light-mode');
+
+    if (body.classList.contains('light-mode')) {
+        btn.textContent = ' LIGHT';
+        navbar.classList.remove('navbar-dark', 'bg-dark');
+        navbar.classList.add('navbar-light', 'bg-light');
+    } else {
+        btn.textContent = ' DARK';
+        navbar.classList.remove('navbar-light', 'bg-light');
+        navbar.classList.add('navbar-dark', 'bg-dark');
+    }
+}
+```
+
+### 동작 방식
+이 코드는 토글 버튼 클릭 시 실행된다.  
+먼저 `body.classList.toggle('light-mode')`를 통해 `body`에 `light-mode` 클래스를 추가하거나 제거한다.  
+그 다음 현재 `light-mode` 클래스가 있는지 확인하여 버튼 글자를 변경하고,  
+navbar의 Bootstrap 클래스를 `navbar-dark bg-dark` 또는 `navbar-light bg-light`로 바꿔  
+화면 테마가 전체적으로 일관되게 보이도록 만든다.
+
+---
+
+## Quarkus 기본 REST 예제
+
+아래 코드는 Quarkus에서 가장 기본적인 REST API 예제이다.  
+사용자가 `/hello` 주소로 GET 요청을 보내면  
+서버는 `"Hello from Quarkus REST"` 문자열을 일반 텍스트 형식으로 응답한다.
+
+### 기능 설명
+- `@Path("/hello")`를 사용하여 `/hello` 경로 지정
+- `@GET`을 사용하여 GET 요청 처리
+- `@Produces(MediaType.TEXT_PLAIN)`을 사용하여 텍스트 형식으로 응답
+- `hello()` 메서드에서 문자열 반환
+
+### 코드
+```java
+package org.acme; // 패키지 선언
+
+import jakarta.ws.rs.GET; // GET 요청 처리를 위한 import
+import jakarta.ws.rs.Path; // URL 경로 지정을 위한 import
+import jakarta.ws.rs.Produces; // 응답 형식 지정을 위한 import
+import jakarta.ws.rs.core.MediaType; // TEXT_PLAIN 같은 응답 타입 사용
+
+@Path("/hello") // /hello 주소로 들어온 요청 처리
+public class GreetingResource { // REST 요청을 담당하는 클래스
+
+    @GET // GET 방식 요청 처리
+    @Produces(MediaType.TEXT_PLAIN) // 일반 문자열 텍스트로 응답
+    public String hello() { // 요청이 들어오면 실행되는 메서드
+        return "Hello from Quarkus REST"; // 브라우저에 보여줄 값 반환
+    }
+}
+```
+
+### 동작 방식
+이 코드는 사용자가 `/hello` 주소로 접속했을 때 실행된다.  
+`@Path("/hello")`에 의해 해당 경로가 지정되고,  
+`@GET` 어노테이션이 붙은 `hello()` 메서드가 호출된다.  
+메서드는 `"Hello from Quarkus REST"` 문자열을 반환하며,  
+`@Produces(MediaType.TEXT_PLAIN)`에 의해 일반 텍스트 형식으로 브라우저에 표시된다.
+
+---
+
+## Quarkus 의존성 추가
+
+아래 코드는 `pom.xml`에 추가한 Quarkus dependency 설정이다.  
+이 설정을 통해 MySQL 데이터베이스 연결, ORM 기반 데이터 처리, JSON 응답 기능을 사용할 수 있다.
+
+### 기능 설명
+- `quarkus-jdbc-mysql` : MySQL 데이터베이스 연결을 위한 JDBC 드라이버
+- `quarkus-hibernate-orm-panache` : Hibernate ORM과 Panache를 사용하여 DB 작업을 간편하게 처리
+- `quarkus-rest-jackson` : Java 객체를 JSON 형식으로 변환하여 REST API 응답에 사용
+
+### 코드
+```xml
+<!-- MySQL 데이터베이스 연결을 위한 JDBC 드라이버 -->
+<dependency>
+    <groupId>io.quarkus</groupId>
+    <artifactId>quarkus-jdbc-mysql</artifactId>
+</dependency>
+
+<!-- Hibernate ORM과 Panache를 사용하여 DB 작업을 쉽게 처리 -->
+<dependency>
+    <groupId>io.quarkus</groupId>
+    <artifactId>quarkus-hibernate-orm-panache</artifactId>
+</dependency>
+
+<!-- Java 객체를 JSON으로 변환하기 위한 Jackson 라이브러리 -->
+<dependency>
+    <groupId>io.quarkus</groupId>
+    <artifactId>quarkus-rest-jackson</artifactId>
+</dependency>
+```
+
+### 동작 방식
+이 dependency들은 `pom.xml`의 `<dependencies>` 태그 안에 추가하여 사용한다.  
+`quarkus-jdbc-mysql`은 MySQL과의 연결을 담당하고,  
+`quarkus-hibernate-orm-panache`는 데이터베이스 테이블을 자바 객체처럼 쉽게 다룰 수 있게 해준다.  
+또한 `quarkus-rest-jackson`은 자바 객체를 JSON 형식으로 변환하여 REST API 응답으로 보낼 수 있게 해준다.
+
+---
+
+## 데이터베이스 연결 설정
+
+아래 코드는 Quarkus 프로젝트에서 MySQL 데이터베이스에 연결하기 위한 `application.properties` 설정이다.  
+데이터베이스 종류, 접속 계정, 비밀번호, 접속 URL을 지정하고,  
+Hibernate의 테이블 자동 반영 및 SQL 출력 기능도 함께 설정하였다.
+
+### 기능 설명
+- `quarkus.datasource.db-kind=mysql` : 사용할 데이터베이스를 MySQL로 지정
+- `quarkus.datasource.username=root` : DB 접속 아이디 설정
+- `quarkus.datasource.password=123123` : DB 접속 비밀번호 설정
+- `quarkus.datasource.jdbc.url=jdbc:mysql://localhost:3306/lol` : MySQL 접속 주소와 데이터베이스 이름 지정
+- `quarkus.hibernate-orm.database.generation=update` : 엔티티 변경 내용을 DB 테이블에 자동 반영
+- `quarkus.hibernate-orm.log.sql=true` : 실행되는 SQL문을 콘솔에 출력
+
+### 코드
+```properties
+# 데이터베이스 연결 설정
+quarkus.datasource.db-kind=mysql
+quarkus.datasource.username=root
+quarkus.datasource.password=123123
+quarkus.datasource.jdbc.url=jdbc:mysql://localhost:3306/lol
+
+# Hibernate 설정
+quarkus.hibernate-orm.database.generation=update
+quarkus.hibernate-orm.log.sql=true
+```
+
+### 동작 방식
+이 설정은 Quarkus 애플리케이션 실행 시 MySQL 데이터베이스와 연결하기 위해 사용된다.  
+`quarkus.datasource.*` 설정으로 DB 접속 정보를 지정하고,  
+Hibernate 설정을 통해 엔티티 변경 시 테이블 구조를 자동으로 반영하며,  
+실행되는 SQL문을 콘솔에 출력하여 데이터 처리 과정을 확인할 수 있다.
+
+---
+
+## Champion 엔티티 클래스
+
+아래 코드는 챔피언 정보를 저장하기 위한 엔티티 클래스이다.  
+`Champion` 클래스는 `PanacheEntity`를 상속하여 Quarkus Panache 기능을 사용할 수 있으며,  
+챔피언 이름, 역할, 라인 정보를 데이터베이스에 저장할 수 있도록 구성하였다.
+
+### 기능 설명
+- `@Entity`를 사용하여 데이터베이스 테이블과 연결되는 엔티티 클래스 선언
+- `PanacheEntity`를 상속하여 기본 `id`와 DB 관련 메서드 사용 가능
+- `name` : 챔피언 이름 저장
+- `role` : 챔피언 역할 저장
+- `line` : 챔피언 라인 정보 저장
+
+### 코드
+```java
+package org.acme; // 패키지 선언
+
+import io.quarkus.hibernate.orm.panache.PanacheEntity; // PanacheEntity 상속용 import
+import jakarta.persistence.Entity; // 엔티티 선언용 import
+
+@Entity // 이 클래스가 데이터베이스 테이블과 연결되는 엔티티임을 표시
+public class Champion extends PanacheEntity { // PanacheEntity를 상속받아 DB 작업을 쉽게 처리
+
+    public String name; // 챔피언 이름
+    public String role; // 역할 (전사, 마법사 등)
+    public String line; // 라인 (탑, 미드 등)
+}
+```
+
+### 동작 방식
+이 클래스는 Quarkus와 Hibernate ORM이 데이터베이스 테이블로 인식하는 엔티티 클래스이다.  
+`@Entity`를 통해 테이블과 연결되며, `PanacheEntity`를 상속함으로써 기본 `id` 필드와  
+`persist()`, `listAll()`, `count()` 등의 메서드를 쉽게 사용할 수 있다.  
+각 필드인 `name`, `role`, `line`은 챔피언의 이름, 역할, 라인 정보를 저장하는 데 사용된다.
+
+---
+
+## Champion REST API
+
+아래 코드는 챔피언 데이터를 조회하고 추가하기 위한 Quarkus REST API 클래스이다.  
+`/champions` 경로에서 GET 요청으로 전체 챔피언 목록을 조회할 수 있고,  
+POST 요청으로 새로운 챔피언 데이터를 데이터베이스에 저장할 수 있다.
+
+### 기능 설명
+- `@Path("/champions")` : `/champions` 경로 지정
+- `@Produces(MediaType.APPLICATION_JSON)` : 응답 데이터를 JSON 형식으로 반환
+- `@Consumes(MediaType.APPLICATION_JSON)` : 요청 데이터를 JSON 형식으로 받음
+- `@GET` : 전체 챔피언 목록 조회
+- `@POST` : 새 챔피언 데이터 추가
+- `@Transactional` : DB 저장 작업을 트랜잭션으로 처리
+
+### 코드
+```java
+package org.acme; // 패키지 선언
+
+import jakarta.transaction.Transactional; // DB 저장 작업을 위한 트랜잭션 처리
+import jakarta.ws.rs.*; // REST 관련 어노테이션 import
+import jakarta.ws.rs.core.MediaType; // JSON 같은 데이터 형식 지정
+import java.util.List; // 여러 개 데이터를 리스트로 반환할 때 사용
+
+@Path("/champions") // /champions 주소 요청 처리
+@Produces(MediaType.APPLICATION_JSON) // 응답은 JSON 형식으로 반환
+@Consumes(MediaType.APPLICATION_JSON) // 요청 데이터는 JSON 형식으로 받음
+public class ChampionResource {
+
+    // 전체 목록 조회
+    @GET // GET 요청 처리
+    public List<Champion> list() {
+        return Champion.listAll(); // DB의 Champion 전체 목록 반환
+    }
+
+    // 새 챔피언 추가
+    @POST // POST 요청 처리
+    @Transactional // DB 저장 작업을 트랜잭션으로 처리
+    public void add(Champion champion) {
+        champion.persist(); // 전달받은 Champion 객체를 DB에 저장
+    }
+}
+```
+
+### 동작 방식
+이 클래스는 `/champions` 경로에 대한 REST 요청을 처리한다.  
+GET 요청이 들어오면 `list()` 메서드가 실행되어 데이터베이스에 저장된 챔피언 전체 목록을 조회하고,  
+이를 JSON 형식으로 반환한다.  
+POST 요청이 들어오면 클라이언트가 보낸 JSON 데이터를 `Champion` 객체로 받아 `persist()`를 통해 DB에 저장한다.  
+이때 `@Transactional`을 사용하여 저장 작업을 하나의 트랜잭션으로 처리한다.
+
+---
+
+## 초기 데이터 자동 등록(DataSeeder)
+
+아래 코드는 Quarkus 애플리케이션이 시작될 때 기본 데이터를 자동으로 데이터베이스에 저장하는 클래스이다.  
+`User` 테이블이 비어 있으면 기본 로그인 계정을 생성하고,  
+`Champion` 테이블이 비어 있으면 기본 챔피언 데이터를 등록한다.
+
+### 기능 설명
+- `@ApplicationScoped` : 애플리케이션 전체에서 한 번만 생성되는 Bean
+- `@Observes StartupEvent` : 서버 시작 이벤트를 감지하여 메서드 실행
+- `@Transactional` : DB 저장 작업을 트랜잭션으로 처리
+- `User.count() == 0` : 유저 데이터가 없을 때 기본 계정 생성
+- `Champion.count() > 0` : 챔피언 데이터가 이미 있으면 중복 저장 방지
+- `persist()` 메서드 : 챔피언 데이터를 공통 방식으로 DB에 저장
+
+### 코드
+```java
+package org.acme.common; // 패키지 선언
+
+import org.acme.champion.Champion; // Champion 엔티티 사용
+import org.acme.login.User; // User 엔티티 사용
+
+import io.quarkus.runtime.StartupEvent; // 애플리케이션 시작 이벤트
+import jakarta.enterprise.context.ApplicationScoped; // 애플리케이션 전체에서 한 번만 생성
+import jakarta.enterprise.event.Observes; // 이벤트 감지
+import jakarta.transaction.Transactional; // DB 작업을 트랜잭션으로 처리
+
+@ApplicationScoped // 한번만 등록
+public class DataSeeder {
+
+    @Transactional
+    void onStart(@Observes StartupEvent ev) { // 서버 시작 시 실행
+        // DataSeeder.java onStart() 메서드에 추가
+        // User 초기 데이터 (챔피온 데이터와 별도 블록)
+        if (User.count() == 0) {
+            User guest = new User();
+            guest.username = "guest";
+            guest.password = "123123";
+            guest.persist();
+        }
+
+        if (Champion.count() > 0) {
+            return; // 이미 데이터 있으면 중단
+        }
+
+        persist("아트록스", "전사", "탑");
+        persist("사일러스", "마법사", "정글/미드");
+        persist("애니비아", "마법사", "미드");
+        persist("브라이어", "전사", "정글");
+        persist("잭스", "전사", "탑");
+        persist("징크스", "원거리딜러", "원딜");
+        persist("야스오", "전사", "미드/탑");
+        persist("리신", "전사", "정글");
+        persist("티모", "마법사", "탑");
+        persist("케인", "암살자", "정글");
+        persist("루시안", "원거리딜러", "원딜/미드");
+    }
+
+    private void persist(String name, String role, String line) {
+        Champion c = new Champion();
+        c.name = name;
+        c.role = role;
+        c.line = line;
+        c.persist();
+    }
+}
+```
+
+### 동작 방식
+이 클래스는 Quarkus 서버가 시작될 때 자동으로 실행된다.  
+먼저 `User` 테이블에 데이터가 없는지 확인하고, 없으면 기본 `guest` 계정을 생성하여 저장한다.  
+그 다음 `Champion` 테이블에 데이터가 이미 존재하면 더 이상 진행하지 않고 종료한다.  
+챔피언 데이터가 없는 경우에는 `persist()` 메서드를 반복 호출하여 기본 챔피언 목록을 데이터베이스에 저장한다.  
+이를 통해 프로그램 실행 직후에도 기본 로그인 계정과 챔피언 데이터가 준비된 상태로 시작할 수 있다.
+
+
+---
