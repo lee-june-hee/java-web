@@ -696,3 +696,439 @@ public class DataSeeder {
 
 
 ---
+
+## 10주차 정리
+## 로그인 페이지 반환(AuthResource)
+
+아래 코드는 Quarkus에서 `/login` 주소로 접속했을 때 로그인 HTML 페이지를 반환하는 코드이다.  
+서버는 `META-INF/resources/login/login.html` 파일을 읽어와 브라우저에 HTML 형식으로 응답한다.
+
+### 기능 설명
+- `@Path("/")` : 기본 경로를 최상위 `/`로 설정
+- `@GET` : GET 요청 처리
+- `@Path("/login")` : `/login` 주소 요청 처리
+- `@Produces(MediaType.TEXT_HTML)` : HTML 형식으로 응답
+- `InputStream` : `login.html` 파일을 읽어오기 위해 사용
+- `Response.ok(html).build()` : 읽어온 HTML 파일을 정상 응답으로 반환
+
+### 코드
+```java
+package org.acme.login; // 패키지 선언
+
+import jakarta.ws.rs.*; // REST 관련 어노테이션 사용
+import jakarta.ws.rs.core.MediaType; // 응답 형식 지정
+import jakarta.ws.rs.core.Response; // HTTP 응답 객체 사용
+import java.net.URI; // 페이지 이동 주소를 만들 때 사용
+import java.io.InputStream; // HTML 파일을 읽어올 때 사용
+
+@Path("/") // 기본 경로가 최상위 /
+public class AuthResource {
+
+    // GET /login → 로그인 HTML 페이지 반환
+    @GET
+    @Path("/login") // /login 경로 명시
+    @Produces(MediaType.TEXT_HTML) // 서버 → 클라이언트, HTML 형식으로 응답
+    public Response loginPage() { // 로그인 페이지 요청 처리 메서드
+        InputStream html = getClass()
+                .getClassLoader()
+                .getResourceAsStream("META-INF/resources/login/login.html");
+
+        return Response.ok(html).build(); // 읽어온 HTML 파일을 정상 응답으로 반환
+    }
+}
+```
+
+### 동작 방식
+이 코드는 사용자가 `/login` 주소로 접속했을 때 실행된다.  
+`@GET`과 `@Path("/login")`에 의해 `loginPage()` 메서드가 호출되고,  
+서버는 `getResourceAsStream()`을 사용해 `META-INF/resources/login/login.html` 파일을 읽어온다.  
+그 후 `Response.ok(html).build()`를 통해 읽어온 HTML 파일을 브라우저에 전달한다.  
+이를 통해 사용자는 `/login` 주소에서 로그인 화면을 볼 수 있다.
+
+---
+
+## 로그인 폼 HTML
+
+아래 코드는 로그인 페이지에서 아이디와 패스워드를 입력받는 HTML form 코드이다.  
+사용자가 로그인 버튼을 누르면 입력한 `username`, `password` 값이  
+POST 방식으로 `/login_check` 주소에 전송된다.
+
+### 기능 설명
+- `section.hero` : 로그인 화면 영역 구성
+- `container` : 로그인 폼의 너비와 배치 조정
+- `form method="POST"` : 입력값을 POST 방식으로 서버에 전송
+- `action="/login_check"` : 로그인 검증 요청을 보낼 서버 경로 지정
+- `name="username"` : 서버에서 아이디 값을 받을 이름
+- `name="password"` : 서버에서 패스워드 값을 받을 이름
+- `required` : 입력값이 비어 있으면 제출되지 않도록 설정
+- `type="submit"` : 버튼 클릭 시 form 제출
+
+### 코드
+```html
+<!-- 네비바 → index.html과 동일하게 복사 -->
+<section class="hero d-flex align-items-center
+    justify-content-center text-center py-5">
+    <div class="container" style="max-width: 400px;">
+        <h2 class="fw-bold mb-4">로그인</h2>
+
+        <form method="POST" action="/login_check">
+            <div class="mb-3 text-start">
+                <label class="form-label">아이디</label>
+                <input type="text" class="form-control"
+                    name="username" placeholder="아이디 입력" required>
+            </div>
+
+            <div class="mb-3 text-start">
+                <label class="form-label">패스워드</label>
+                <input type="password" class="form-control"
+                    name="password" placeholder="패스워드 입력" required>
+            </div>
+
+            <button type="submit"
+                class="btn btn-primary w-100">로그인</button>
+        </form>
+    </div>
+</section>
+```
+
+### 동작 방식
+이 코드는 로그인 페이지에서 사용자에게 아이디와 패스워드 입력창을 보여준다.  
+사용자가 값을 입력하고 로그인 버튼을 누르면 `form` 태그가 동작하여  
+`username`과 `password` 값을 `/login_check` 주소로 POST 방식으로 전송한다.  
+서버에서는 이 값을 받아 아이디와 패스워드가 올바른지 확인하고,  
+로그인 성공 또는 실패 처리를 진행한다.
+
+---
+
+## 로그인 확인 처리(login_check)
+
+아래 코드는 로그인 form에서 전송된 아이디와 패스워드를 서버에서 받는 코드이다.  
+사용자가 로그인 버튼을 누르면 `username`, `password` 값이 POST 방식으로 `/login_check` 주소에 전송되고,  
+서버는 해당 요청을 처리한 뒤 임시로 로그인 성공 페이지로 이동시킨다.
+
+### 기능 설명
+- `@POST` : POST 요청 처리
+- `@Path("/login_check")` : `/login_check` 경로 지정
+- `@Consumes(MediaType.APPLICATION_FORM_URLENCODED)` : HTML form 데이터 수신
+- `@FormParam("username")` : form에서 전송된 아이디 값 받기
+- `@FormParam("password")` : form에서 전송된 패스워드 값 받기
+- `Response.seeOther()` : 요청 처리 후 다른 페이지로 이동
+- `URI.create("/login/main_after_login.html")` : 이동할 페이지 주소 지정
+
+### 코드
+```java
+@POST // POST 방식 요청 처리
+@Path("/login_check") // /login_check 주소 요청 처리
+@Consumes(MediaType.APPLICATION_FORM_URLENCODED) // 클라이언트 → 서버, form 데이터 받기
+public Response loginCheck(
+        @FormParam("username") String username, // form의 name="username" 값 받기
+        @FormParam("password") String password) { // form의 name="password" 값 받기
+
+    // [임시] 일단 로그인 성공 처리 (DB 체크 전)
+    return Response
+            .seeOther(URI.create("/login/main_after_login.html")) // 로그인 성공 후 이동할 페이지
+            .build(); // 응답 완성
+}
+```
+
+### 동작 방식
+이 코드는 사용자가 로그인 form을 제출했을 때 실행된다.  
+form의 `method="POST"`와 `action="/login_check"`에 의해 `/login_check` 주소로 요청이 전송되고,  
+서버에서는 `@FormParam("username")`과 `@FormParam("password")`를 통해 입력값을 받는다.  
+현재 단계에서는 데이터베이스 검증을 하지 않고 임시로 로그인 성공 처리하며,  
+`Response.seeOther()`를 사용해 `/login/main_after_login.html` 페이지로 이동시킨다.
+
+---
+
+## User 엔티티 클래스
+
+아래 코드는 로그인 기능에서 사용할 사용자 정보를 저장하기 위한 엔티티 클래스이다.  
+`User` 클래스는 `PanacheEntity`를 상속하여 DB 작업을 쉽게 처리할 수 있으며,  
+`users` 테이블에 사용자 아이디와 비밀번호를 저장한다.
+
+### 기능 설명
+- `@Entity` : 데이터베이스 테이블과 연결되는 엔티티 클래스 선언
+- `@Table(name = "users")` : 테이블 이름을 `users`로 지정
+- `PanacheEntity` : 기본 `id`와 DB 관련 메서드 사용 가능
+- `username` : 사용자 아이디 저장
+- `password` : 사용자 비밀번호 저장
+- `findByUsername()` : 사용자 아이디로 User 데이터 조회
+
+### 코드
+```java
+package org.acme.login; // 패키지 선언
+
+import io.quarkus.hibernate.orm.panache.PanacheEntity; // PanacheEntity 상속을 위한 import
+import jakarta.persistence.Entity; // 엔티티 선언을 위한 import
+import jakarta.persistence.Table; // 테이블 이름 지정을 위한 import
+
+@Entity // 이 클래스가 데이터베이스 테이블과 연결되는 엔티티임을 표시
+@Table(name = "users") // 예약어 충돌 방지: "user" → "users"
+public class User extends PanacheEntity { // PanacheEntity를 상속받아 DB 작업을 쉽게 처리
+
+    public String username; // 사용자 아이디
+    public String password; // 사용자 비밀번호
+
+    // 사용자명으로 조회하는 정적 메서드
+    public static User findByUsername(String username) {
+        return find("username", username).firstResult(); // username이 일치하는 첫 번째 사용자 반환
+    }
+}
+```
+
+### 동작 방식
+이 클래스는 로그인 기능에서 사용자 정보를 데이터베이스에 저장하고 조회하기 위해 사용된다.  
+`@Entity`를 통해 데이터베이스 테이블과 연결되고, `@Table(name = "users")`를 통해 실제 테이블 이름을 `users`로 지정한다.  
+`username`과 `password` 필드는 각각 사용자 아이디와 비밀번호를 저장한다.  
+로그인 처리 시 `User.findByUsername(username)`을 호출하면, DB에서 해당 아이디와 일치하는 사용자를 찾아 첫 번째 결과를 반환한다.  
+이 결과를 이용해 사용자가 존재하는지 확인하고, 비밀번호가 맞는지 비교하여 로그인 성공 여부를 판단할 수 있다.
+
+---
+
+## User 초기 데이터 등록
+
+아래 코드는 Quarkus 애플리케이션이 시작될 때 `User` 테이블에 기본 로그인 계정을 자동으로 등록하는 코드이다.  
+`User` 테이블이 비어 있을 경우에만 `guest` 계정을 생성하므로, 서버를 여러 번 실행해도 같은 계정이 중복 저장되지 않는다.
+
+### 기능 설명
+- `User.count() == 0` : User 테이블에 데이터가 없는지 확인
+- `new User()` : 새 사용자 객체 생성
+- `guest.username = "guest"` : 기본 아이디 설정
+- `guest.password = "123123"` : 기본 비밀번호 설정
+- `guest.persist()` : 생성한 사용자를 데이터베이스에 저장
+
+### 코드
+```java
+// DataSeeder.java onStart() 메서드에 추가
+// User 초기 데이터 (챔피온 데이터와 별도 블록)
+if (User.count() == 0) { // User 테이블에 데이터가 하나도 없으면
+    User guest = new User(); // 새 User 객체 생성
+    guest.username = "guest"; // 기본 아이디 설정
+    guest.password = "123123"; // 기본 비밀번호 설정
+    guest.persist(); // DB에 저장
+}
+```
+
+### 동작 방식
+이 코드는 서버가 시작될 때 실행되는 `DataSeeder`의 `onStart()` 메서드 안에 작성된다.  
+먼저 `User.count()`를 통해 `User` 테이블에 데이터가 있는지 확인한다.  
+데이터가 하나도 없으면 `guest`라는 새 사용자 객체를 만들고, 아이디와 비밀번호를 설정한 뒤 `persist()`를 사용해 데이터베이스에 저장한다.  
+이를 통해 프로젝트 실행 시 기본 로그인 테스트 계정을 자동으로 준비할 수 있다.
+
+---
+
+## 세션 설정(SessionConfig)
+
+아래 코드는 Quarkus Vert.x 환경에서 세션 기능을 사용하기 위한 설정 클래스이다.  
+로그인 후 사용자 정보를 세션에 저장하려면 요청에 세션 핸들러가 적용되어야 하며,  
+이 클래스는 모든 요청에 `SessionHandler`를 등록하여 세션을 사용할 수 있도록 한다.
+
+### 기능 설명
+- `Router` : 서버 요청 경로를 관리하는 객체
+- `SessionHandler` : 세션 기능을 처리하는 핸들러
+- `LocalSessionStore` : 서버 내부에 세션 정보를 저장하는 저장소
+- `@Inject` : Quarkus 컨테이너가 `Vertx` 객체를 자동 주입
+- `@Observes Router router` : Router가 준비될 때 메서드 실행
+- `setSessionTimeout(60 * 60 * 1000L)` : 세션 유지 시간을 1시간으로 설정
+- `setCookieHttpOnlyFlag(true)` : JavaScript에서 세션 쿠키 접근을 막아 보안 강화
+
+### 코드
+```java
+package org.acme.login; // 패키지 선언
+
+import io.vertx.ext.web.Router; // 요청 라우터 사용
+import io.vertx.ext.web.handler.SessionHandler; // 세션 처리를 위한 핸들러
+import io.vertx.ext.web.sstore.LocalSessionStore; // 로컬 세션 저장소
+import jakarta.enterprise.event.Observes; // Router 이벤트 감지
+import io.quarkus.vertx.http.HttpServerStart; // HTTP 서버 시작 관련 클래스
+import jakarta.inject.Inject; // 컨테이너 자동 주입
+import io.vertx.core.Vertx; // Vert.x 객체 사용
+
+public class SessionConfig {
+
+    @Inject // 컨테이너 자동 주입
+    Vertx vertx; // 세션 저장소 관리
+
+    public void init(@Observes Router router) { // Router가 준비될 때 실행
+        router.route().handler( // 모든 요청에 세션 핸들러 적용
+                SessionHandler
+                        .create(LocalSessionStore.create(vertx)) // 로컬 세션 저장소 생성
+                        .setSessionTimeout(60 * 60 * 1000L) // 세션 유지 시간 1시간
+                        .setCookieHttpOnlyFlag(true) // JavaScript에서 쿠키 접근 차단
+        );
+    }
+}
+```
+
+### 동작 방식
+이 클래스는 Quarkus 서버가 실행되고 `Router`가 준비될 때 `init()` 메서드를 실행한다.  
+`router.route().handler()`를 통해 모든 요청에 `SessionHandler`를 등록하고,  
+`LocalSessionStore.create(vertx)`를 사용해 서버 내부에 세션 저장소를 만든다.  
+또한 `setSessionTimeout(60 * 60 * 1000L)`로 세션 유지 시간을 1시간으로 설정하고,  
+`setCookieHttpOnlyFlag(true)`로 세션 쿠키를 JavaScript에서 접근하지 못하게 하여 보안을 강화한다.  
+이 설정이 적용되면 로그인 처리 코드에서 `context.session()`을 사용해 로그인 사용자 정보를 저장할 수 있다.
+
+---
+
+## 로그인 검증 및 세션 저장
+
+아래 코드는 로그인 form에서 전달된 아이디와 패스워드를 서버에서 검증하고,  
+로그인 성공 시 세션에 사용자 정보를 저장하는 로그인 처리 코드이다.
+
+### 기능 설명
+- `@Inject` : Quarkus 컨테이너가 `RoutingContext` 객체를 자동 주입
+- `RoutingContext` : 현재 요청과 세션 정보에 접근하기 위해 사용
+- `@POST` : POST 요청 처리
+- `@Path("/login_check")` : `/login_check` 경로 지정
+- `@Transactional` : DB 조회 및 처리 작업을 트랜잭션으로 실행
+- `@Consumes(MediaType.APPLICATION_FORM_URLENCODED)` : HTML form 데이터 수신
+- `@FormParam("username")` : form에서 전송된 아이디 값 받기
+- `@FormParam("password")` : form에서 전송된 패스워드 값 받기
+- `User.findByUsername(username)` : 입력한 아이디로 사용자 조회
+- `context.session().put("loginUser", username)` : 로그인 성공 시 세션에 사용자 정보 저장
+- `Response.seeOther()` : 로그인 성공 또는 실패 후 다른 페이지로 이동
+
+### 코드
+```java
+import jakarta.inject.Inject; // 컨테이너 자동 주입을 위한 import
+import io.vertx.ext.web.RoutingContext; // Vert.x 요청/세션 정보 접근용 import
+
+@Inject
+RoutingContext context; // Quarkus Vert.x 세션 접근
+
+@POST // 아이디, 패스워드 전송받음
+@Path("/login_check") // /login_check 주소 요청 처리
+@Transactional // DB 조회/처리를 트랜잭션으로 실행
+@Consumes(MediaType.APPLICATION_FORM_URLENCODED) // form 데이터 받기
+public Response loginCheck(
+        @FormParam("username") String username, // form의 name="username" 값 받기
+        @FormParam("password") String password) { // form의 name="password" 값 받기
+
+    User user = User.findByUsername(username); // 아이디 조회
+
+    if (user == null || !user.password.equals(password)) { // 아이디 없음 또는 비밀번호 불일치 확인
+        return Response
+                .seeOther(URI.create("/login?error=1")) // 로그인 실패 시 로그인 페이지로 이동
+                .build(); // 응답 완성
+    }
+
+    // 세션에 로그인 정보 저장
+    context.session().put("loginUser", username); // 세션에 로그인한 사용자 아이디 저장
+
+    return Response
+            .seeOther(URI.create("/after_login")) // 로그인 성공 시 이동할 페이지
+            .build(); // 응답 완성
+}
+```
+
+### 동작 방식
+이 코드는 사용자가 로그인 form을 제출했을 때 실행된다.  
+form에서 전달된 `username`과 `password` 값을 `@FormParam`으로 받은 뒤,  
+`User.findByUsername(username)`을 사용해 데이터베이스에서 해당 아이디를 조회한다.  
+사용자가 존재하지 않거나 비밀번호가 일치하지 않으면 `/login?error=1`로 이동하여 로그인 실패 처리를 한다.  
+아이디와 비밀번호가 일치하면 `context.session().put("loginUser", username)`을 통해 세션에 로그인 사용자 정보를 저장하고,  
+로그인 후 페이지인 `/after_login`으로 이동한다.
+
+---
+
+## 로그인 후 페이지 세션 검사
+
+아래 코드는 `/after_login` 페이지에 접근할 때 세션에 로그인 정보가 있는지 확인하는 코드이다.  
+로그인하지 않은 사용자는 로그인 페이지로 이동시키고,  
+로그인한 사용자에게만 `main_after_login.html` 페이지를 보여준다.
+
+### 기능 설명
+- `@GET` : GET 요청 처리
+- `@Path("/after_login")` : `/after_login` 경로 지정
+- `@Produces(MediaType.TEXT_HTML)` : HTML 형식으로 응답
+- `context.session().get("loginUser")` : 세션에서 로그인 사용자 정보 조회
+- `loginUser == null` : 로그인하지 않은 사용자 판단
+- `Response.seeOther(URI.create("/login"))` : 로그인 페이지로 강제 이동
+- `getResourceAsStream()` : 로그인 후 HTML 파일 읽기
+- `Response.ok(html).build()` : HTML 파일을 정상 응답으로 반환
+
+### 코드
+```java
+@GET // GET 요청 처리
+@Path("/after_login") // /after_login 주소 요청 처리
+@Produces(MediaType.TEXT_HTML) // HTML 형식으로 응답
+public Response afterLogin() {
+
+    // 세션 체크: 로그인 안 한 사용자 차단
+    String loginUser = context.session().get("loginUser"); // 세션에서 로그인 사용자 정보 가져오기
+
+    // 세션 내용 로그 출력
+    System.out.println("=== 세션 ID : " + context.session().id()); // 현재 세션 ID 출력
+    System.out.println("=== loginUser : " + loginUser); // 세션에 저장된 로그인 사용자 출력
+
+    if (loginUser == null) { // 세션에 로그인 정보가 없으면
+        // 세션 없음 → 로그인 페이지로 강제 이동
+        return Response
+                .seeOther(URI.create("/login")) // 로그인 페이지로 이동
+                .build(); // 응답 완성
+    }
+
+    // 세션 있음 → 로그인 후 HTML 반환
+    InputStream html = getClass()
+            .getClassLoader()
+            .getResourceAsStream("META-INF/resources/login/main_after_login.html"); // 로그인 후 HTML 파일 읽기
+
+    return Response.ok(html).build(); // HTML 파일을 정상 응답으로 반환
+}
+```
+
+### 동작 방식
+이 코드는 사용자가 `/after_login` 주소로 접속했을 때 실행된다.  
+먼저 `context.session().get("loginUser")`를 통해 세션에 로그인 사용자 정보가 있는지 확인한다.  
+세션에 `loginUser` 값이 없으면 로그인하지 않은 사용자로 판단하고 `/login` 페이지로 이동시킨다.  
+반대로 `loginUser` 값이 존재하면 로그인한 사용자로 판단하여 `META-INF/resources/login/main_after_login.html` 파일을 읽어온다.  
+마지막으로 `Response.ok(html).build()`를 통해 로그인 후 HTML 페이지를 브라우저에 표시한다.
+
+---
+
+## 로그아웃 처리
+
+아래 코드는 사용자가 `/logout` 주소로 접속했을 때 현재 세션을 삭제하고 메인 페이지로 이동시키는 로그아웃 처리 코드이다.  
+로그인 시 세션에 저장했던 `loginUser` 값을 세션 삭제를 통해 제거하여 로그인 상태를 해제한다.
+
+### 기능 설명
+- `@GET` : GET 요청 처리
+- `@Path("/logout")` : `/logout` 경로 지정
+- `context.session().id()` : 현재 세션 ID 확인
+- `context.session().get("loginUser")` : 세션에 저장된 로그인 사용자 확인
+- `context.session().destroy()` : 현재 세션 전체 삭제
+- `Response.seeOther(URI.create("/"))` : 로그아웃 후 메인 페이지로 이동
+
+### 코드
+```java
+@GET // GET 요청 처리
+@Path("/logout") // /logout 주소 요청 처리
+public Response logout() {
+
+    // 로그아웃 전 세션 정보 출력
+    System.out.println("=== 로그아웃 전 세션 ID : " + context.session().id()); // 로그아웃 전 세션 ID 확인
+    System.out.println("=== 로그아웃 전 loginUser : " + context.session().get("loginUser")); // 로그아웃 전 로그인 사용자 확인
+
+    // 세션 전체 삭제
+    context.session().destroy(); // 현재 세션을 삭제하여 로그인 정보 제거
+
+    // 로그아웃 후 세션 정보 출력
+    System.out.println("=== 로그아웃 후 세션 ID : " + context.session().id()); // 로그아웃 후 세션 ID 확인
+    System.out.println("=== 로그아웃 후 loginUser : " + context.session().get("loginUser")); // 로그아웃 후 loginUser 값 확인
+
+    return Response
+            .seeOther(URI.create("/")) // 로그아웃 후 메인 페이지로 이동
+            .build(); // 응답 완성
+}
+```
+
+### 동작 방식
+이 코드는 사용자가 `/logout` 주소로 접속했을 때 실행된다.  
+먼저 로그아웃 전 세션 ID와 세션에 저장된 `loginUser` 값을 콘솔에 출력한다.  
+그 다음 `context.session().destroy()`를 실행하여 현재 세션을 삭제하고 로그인 정보를 제거한다.  
+세션 삭제 후에는 다시 세션 ID와 `loginUser` 값을 출력하여 세션 정보가 제거되었는지 확인한다.  
+마지막으로 `Response.seeOther(URI.create("/"))`를 통해 사용자를 메인 페이지로 이동시킨다.
+
+---
+
+### 11주차 정리
