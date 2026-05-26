@@ -1132,3 +1132,898 @@ public Response logout() {
 ---
 
 ### 11주차 정리
+## 회원가입 버튼 추가
+
+아래 코드는 로그인 페이지에서 로그인 버튼 아래에 회원가입 버튼을 추가하는 HTML 코드이다.  
+사용자가 회원가입 버튼을 누르면 `/register` 경로로 이동하여 회원가입 페이지에 접근할 수 있다.
+
+### 기능 설명
+- `<!-- 로그인 버튼 아래 추가 -->` : 코드 설명용 HTML 주석
+- `<hr>` : 로그인 버튼과 회원가입 버튼 사이에 구분선 추가
+- `<a href="/register">` : 회원가입 페이지로 이동하는 링크
+- `btn btn-outline-secondary` : Bootstrap 버튼 스타일 적용
+- `w-100` : 버튼 너비를 부모 영역 기준 100%로 설정
+
+### 코드
+```html
+<!-- 로그인 버튼 아래 추가 -->
+<hr>
+
+<a href="/register"
+    class="btn btn-outline-secondary w-100">
+    회원가입
+</a>
+```
+
+### 동작 방식
+이 코드는 로그인 form 아래에 추가된다.  
+`<hr>` 태그를 통해 로그인 버튼과 회원가입 버튼 사이를 구분하고,  
+`<a href="/register">` 태그를 사용해 회원가입 페이지로 이동할 수 있는 링크를 만든다.  
+Bootstrap의 `btn`, `btn-outline-secondary`, `w-100` 클래스를 적용하여 링크를 버튼처럼 보이게 하고,  
+사용자가 클릭하면 `/register` 주소로 이동한다.
+
+---
+
+## 회원가입 페이지 반환
+
+아래 코드는 Quarkus에서 `/register` 주소로 접속했을 때 회원가입 HTML 페이지를 반환하는 코드이다.  
+서버는 `META-INF/resources/login/register.html` 파일을 읽어와 브라우저에 HTML 형식으로 응답한다.
+
+### 기능 설명
+- `@GET` : GET 요청 처리
+- `@Path("/register")` : `/register` 경로 지정
+- `@Produces(MediaType.TEXT_HTML)` : HTML 형식으로 응답
+- `InputStream` : `register.html` 파일을 읽어오기 위해 사용
+- `getResourceAsStream()` : 프로젝트 리소스 경로에서 HTML 파일 읽기
+- `Response.ok(html).build()` : 읽어온 HTML 파일을 정상 응답으로 반환
+
+### 코드
+```java
+// AuthResource.java 아래 새로 추가
+@GET // GET 요청 처리
+@Path("/register") // /register 주소 요청 처리
+@Produces(MediaType.TEXT_HTML) // HTML 형식으로 응답
+public Response registerPage() { // 회원가입 페이지 요청 처리 메서드
+    InputStream html = getClass()
+            .getClassLoader()
+            .getResourceAsStream(
+                    "META-INF/resources/login/register.html"); // register.html 파일 읽기
+
+    return Response.ok(html).build(); // 읽어온 HTML 파일을 정상 응답으로 반환
+}
+```
+
+### 동작 방식
+이 코드는 사용자가 `/register` 주소로 접속했을 때 실행된다.  
+`@GET`과 `@Path("/register")`에 의해 `registerPage()` 메서드가 호출되고,  
+서버는 `getResourceAsStream()`을 사용해 `META-INF/resources/login/register.html` 파일을 읽어온다.  
+그 후 `Response.ok(html).build()`를 통해 읽어온 HTML 파일을 브라우저에 전달한다.  
+이를 통해 사용자는 `/register` 주소에서 회원가입 화면을 볼 수 있다.
+
+---
+
+## 회원가입 폼 HTML
+
+아래 코드는 회원가입 페이지에서 아이디, 패스워드, 이메일, 연락처를 입력받는 HTML form 코드이다.  
+사용자가 회원가입 버튼을 누르면 바로 서버로 전송되지 않고,  
+JavaScript의 `validateAndShowModal()` 함수를 통해 입력값 검사를 먼저 진행한다.
+
+### 기능 설명
+- `section.hero` : 회원가입 화면 영역 구성
+- `container` : 회원가입 폼의 너비와 배치 조정
+- `form id="registerForm"` : JavaScript에서 form을 선택하기 위한 id
+- `action="/register_check"` : 회원가입 요청을 보낼 서버 경로 지정
+- `method="post"` : 입력값을 POST 방식으로 서버에 전송
+- `id="username"` / `name="username"` : 아이디 입력값 검사 및 서버 전송
+- `id="password"` : 원본 패스워드 입력값 검사 및 해시 처리에 사용
+- `id="passwordConfirm"` : 패스워드 재입력 확인
+- `id="email"` / `name="email"` : 이메일 입력값 검사 및 서버 전송
+- `id="phone"` / `name="phone"` : 연락처 입력값 검사 및 서버 전송
+- `invalid-feedback` : 입력값 오류 메시지 출력 영역
+- `type="hidden"` : 화면에 보이지 않는 숨김 입력 필드
+- `id="hashedPassword"` / `name="password"` : 해시된 패스워드를 서버로 전송
+- `type="button"` : 버튼 클릭 시 바로 submit하지 않고 JavaScript 함수 실행
+- `onclick="validateAndShowModal()"` : 유효성 검사 및 확인 모달 실행
+
+### 코드
+```html
+<!-- 네비바 아래 삽입한다. -->
+<section class="hero d-flex align-items-center
+    justify-content-center text-center py-5">
+    <div class="container" style="max-width: 480px;">
+        <h2 class="fw-bold mb-4">회원가입</h2>
+
+        <form id="registerForm" action="/register_check" method="post">
+            <!-- 아이디 -->
+            <div class="mb-3 text-start">
+                <label class="form-label">아이디 *</label>
+                <input type="text" class="form-control"
+                    id="username" name="username"
+                    placeholder="4~20자 영문/숫자" required>
+                <div class="invalid-feedback" id="usernameMsg"></div>
+            </div>
+
+            <!-- 패스워드 -->
+            <div class="mb-3 text-start">
+                <label class="form-label">패스워드 *</label>
+                <input type="password" class="form-control"
+                    id="password"
+                    placeholder="8자 이상, 영문+숫자+특수문자" required>
+            </div>
+
+            <!-- 패스워드 확인 -->
+            <div class="mb-3 text-start">
+                <label class="form-label">패스워드 확인 *</label>
+                <input type="password" class="form-control"
+                    id="passwordConfirm"
+                    placeholder="패스워드 재입력" required>
+                <div class="invalid-feedback" id="passwordMsg"></div>
+            </div>
+
+            <!-- 이메일 -->
+            <div class="mb-3 text-start">
+                <label class="form-label">이메일 *</label>
+                <input type="email" class="form-control"
+                    id="email" name="email"
+                    placeholder="example@email.com" required>
+                <div class="invalid-feedback" id="emailMsg"></div>
+            </div>
+
+            <!-- 연락처 -->
+            <div class="mb-3 text-start">
+                <label class="form-label">연락처 *</label>
+                <input type="text" class="form-control"
+                    id="phone" name="phone"
+                    placeholder="010-0000-0000" required>
+                <div class="invalid-feedback" id="phoneMsg"></div>
+            </div>
+
+            <input type="hidden" id="hashedPassword" name="password">
+
+            <button type="button" class="btn btn-primary w-100"
+                onclick="validateAndShowModal()">
+                회원가입
+            </button>
+        </form>
+    </div>
+</section>
+```
+
+### 동작 방식
+이 코드는 회원가입 페이지에서 사용자에게 아이디, 패스워드, 패스워드 확인, 이메일, 연락처 입력창을 보여준다.  
+사용자가 회원가입 버튼을 누르면 `type="button"` 설정 때문에 form이 바로 제출되지 않고,  
+`onclick="validateAndShowModal()"`에 의해 JavaScript 유효성 검사 함수가 먼저 실행된다.  
+입력값에 문제가 있으면 각 입력칸 아래의 `invalid-feedback` 영역에 오류 메시지를 표시한다.  
+입력값이 모두 올바르면 JavaScript에서 패스워드를 SHA-256으로 해시 처리하고,  
+그 결과를 `id="hashedPassword"`인 hidden input에 저장한다.  
+이후 확인 모달에서 사용자가 가입을 확정하면 `registerForm`이 `/register_check`로 POST 전송된다.
+
+
+---
+
+## User 엔티티 클래스 확장
+
+아래 코드는 회원가입과 로그인 기능에서 사용할 사용자 정보를 저장하기 위한 엔티티 클래스이다.  
+`User` 클래스는 `PanacheEntity`를 상속하여 DB 작업을 쉽게 처리할 수 있으며,  
+`users` 테이블에 사용자 아이디, 비밀번호 해시값, 이메일, 연락처를 저장한다.
+
+### 기능 설명
+- `@Entity` : 데이터베이스 테이블과 연결되는 엔티티 클래스 선언
+- `@Table(name = "users")` : 테이블 이름을 `users`로 지정
+- `PanacheEntity` : 기본 `id`와 DB 관련 메서드 사용 가능
+- `username` : 사용자 아이디 저장
+- `password` : SHA-256으로 변환된 비밀번호 해시값 저장
+- `@Column(unique = true)` : 이메일 중복 저장 방지
+- `email` : 사용자 이메일 저장
+- `phone` : 사용자 연락처 저장
+- `findByUsername()` : 아이디로 사용자 조회
+- `findByEmail()` : 이메일로 사용자 조회
+
+### 코드
+```java
+package org.acme.login; // 패키지 선언
+
+import io.quarkus.hibernate.orm.panache.PanacheEntity; // PanacheEntity 상속을 위한 import
+import jakarta.persistence.Entity; // 엔티티 선언을 위한 import
+import jakarta.persistence.Table; // 테이블 이름 지정을 위한 import
+import jakarta.persistence.Column; // 컬럼 속성 설정을 위한 import
+
+@Entity // 이 클래스가 데이터베이스 테이블과 연결되는 엔티티임을 표시
+@Table(name = "users") // users 테이블과 연결
+public class User extends PanacheEntity { // PanacheEntity를 상속받아 DB 작업을 쉽게 처리
+
+    public String username; // 사용자 아이디
+    public String password; // SHA-256 해시값 저장
+
+    @Column(unique = true) // 이메일 중복 방지
+    public String email; // 사용자 이메일
+
+    public String phone; // 연락처
+
+    // 아이디로 조회
+    public static User findByUsername(String username) {
+        return find("username", username).firstResult(); // username이 일치하는 첫 번째 사용자 반환
+    }
+
+    // 이메일로 조회
+    public static User findByEmail(String email) {
+        return find("email", email).firstResult(); // email이 일치하는 첫 번째 사용자 반환
+    }
+}
+```
+
+### 동작 방식
+이 클래스는 회원가입과 로그인 기능에서 사용자 정보를 데이터베이스에 저장하고 조회하기 위해 사용된다.  
+`@Entity`를 통해 데이터베이스 테이블과 연결되고, `@Table(name = "users")`를 통해 실제 테이블 이름을 `users`로 지정한다.  
+`username`, `password`, `email`, `phone` 필드는 각각 사용자 아이디, 비밀번호 해시값, 이메일, 연락처를 저장한다.  
+회원가입 시에는 `findByUsername()`과 `findByEmail()`을 사용해 아이디와 이메일 중복 여부를 확인할 수 있다.  
+중복이 없으면 새 `User` 객체를 생성하여 입력받은 사용자 정보를 저장한다.  
+로그인 시에는 `findByUsername()`으로 아이디에 해당하는 사용자를 조회한 뒤 비밀번호를 비교하여 로그인 여부를 판단할 수 있다.
+
+---
+
+## 회원가입 입력값 유효성 검사
+
+아래 코드는 회원가입 form에서 입력한 아이디, 패스워드, 이메일, 연락처를 검사하는 JavaScript 코드이다.  
+입력값이 형식에 맞지 않으면 Bootstrap의 `is-invalid` 클래스를 적용하고 오류 메시지를 표시하며,  
+모든 검사를 통과하면 확인 모달을 출력한다.
+
+### 기능 설명
+- `validateAndShowModal()` : 회원가입 입력값 전체 검사
+- `usernameRegex` : 아이디가 4~20자 영문/숫자인지 검사
+- `passwordRegex` : 패스워드가 8자 이상이며 영문, 숫자, 특수문자를 포함하는지 검사
+- `password !== passwordConfirm` : 패스워드와 패스워드 확인 값 일치 여부 검사
+- `emailRegex` : 이메일 형식 검사
+- `phoneRegex` : `010-0000-0000` 형식의 연락처 검사
+- `showError()` : 입력값 오류 표시
+- `clearError()` : 오류 표시 제거 및 정상 표시 추가
+- `window.onload` : 서버에서 전달된 중복 오류를 URL에서 확인하여 표시
+
+### 코드
+```javascript
+function validateAndShowModal() {
+    let valid = true;
+
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+    const passwordConfirm = document.getElementById('passwordConfirm').value;
+    const email = document.getElementById('email').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+
+    // ① 아이디 : 4~20자 영문/숫자
+    const usernameRegex = /^[a-zA-Z0-9]{4,20}$/;
+    if (!usernameRegex.test(username)) {
+        showError('username', '아이디는 4~20자 영문/숫자만 가능합니다.');
+        valid = false;
+    } else {
+        clearError('username');
+    }
+
+    // ② 패스워드 : 8자 이상, 영문+숫자+특수문자
+    const passwordRegex = /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}$/;
+    if (!passwordRegex.test(password)) {
+        showError('password', '8자 이상, 영문+숫자+특수문자를 포함 필요.');
+        valid = false;
+    } else {
+        clearError('password');
+    }
+
+    // ③ 패스워드 확인
+    if (password !== passwordConfirm) {
+        showError('passwordConfirm', '패스워드가 일치하지 않습니다.');
+        valid = false;
+    } else {
+        clearError('passwordConfirm');
+    }
+
+    // ④ 이메일 형식
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        showError('email', '올바른 이메일 형식이 아닙니다.');
+        valid = false;
+    } else {
+        clearError('email');
+    }
+
+    // ⑤ 연락처 형식 : 010-0000-0000
+    const phoneRegex = /^010-\d{4}-\d{4}$/;
+    if (!phoneRegex.test(phone)) {
+        showError('phone', '010-0000-0000 형식으로 입력해주세요.');
+        valid = false;
+    } else {
+        clearError('phone');
+    }
+
+    // 전체 통과 시 확인 모달 출력
+    if (valid) showConfirmModal();
+}
+
+function showError(fieldId, message) {
+    const field = document.getElementById(fieldId);
+    field.classList.add('is-invalid');
+
+    const msg = document.getElementById(fieldId + 'Msg');
+    if (msg) msg.textContent = message;
+}
+
+function clearError(fieldId) {
+    const field = document.getElementById(fieldId);
+    field.classList.remove('is-invalid');
+    field.classList.add('is-valid');
+}
+
+window.onload = function() {
+    const params = new URLSearchParams(window.location.search);
+    const error = params.get('error');
+
+    if (error === 'duplicate_username') {
+        showError('username', '이미 사용 중인 아이디입니다.');
+    } else if (error === 'duplicate_email') {
+        showError('email', '이미 사용 중인 이메일입니다.');
+    }
+}
+```
+
+### 동작 방식
+이 코드는 사용자가 회원가입 버튼을 눌렀을 때 `validateAndShowModal()` 함수가 실행되면서 시작된다.  
+먼저 아이디, 패스워드, 패스워드 확인, 이메일, 연락처 입력값을 가져온 뒤 각각 정규식을 사용해 형식을 검사한다.  
+형식이 맞지 않는 입력값이 있으면 `showError()`를 호출하여 해당 입력칸에 `is-invalid` 클래스를 추가하고 오류 메시지를 표시한다.  
+입력값이 올바른 경우에는 `clearError()`를 호출하여 오류 표시를 제거하고 `is-valid` 클래스를 추가한다.  
+모든 검사를 통과하면 `showConfirmModal()`을 실행하여 회원가입 확인 모달을 출력한다.  
+또한 페이지가 로딩될 때 URL의 `error` 값을 확인하여 아이디 또는 이메일 중복 오류가 있으면 해당 입력칸에 오류 메시지를 표시한다.
+
+---
+
+## 비밀번호 해시 처리 및 회원가입 확인 모달
+
+아래 코드는 회원가입 시 입력한 비밀번호를 SHA-256으로 해시 처리하고,  
+사용자가 입력한 정보를 확인 모달에 표시한 뒤 form을 서버로 전송하는 JavaScript 코드이다.
+
+### 기능 설명
+- `hashPassword()` : 입력한 비밀번호를 SHA-256 해시값으로 변환
+- `TextEncoder` : 문자열을 바이트 데이터로 변환
+- `crypto.subtle.digest('SHA-256', data)` : 브라우저 내장 Web Crypto API로 해시 생성
+- `showConfirmModal()` : 입력 정보를 모달에 표시하고 해시값 생성
+- `confirmUsername`, `confirmEmail`, `confirmPhone` : 모달에 표시할 사용자 입력 정보
+- `hashedPassword` : 해시된 비밀번호를 저장하는 hidden input
+- `console.log()` : 개발자 도구에서 해시값 확인
+- `bootstrap.Modal` : Bootstrap 모달 생성 및 표시
+- `submitRegister()` : 확인 모달을 닫고 회원가입 form 전송
+- `registerForm.submit()` : `/register_check`로 POST 요청 전송
+
+### 코드
+```javascript
+// SHA-256 해시 함수 (브라우저 내장 Web Crypto API)
+async function hashPassword(password) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(password);
+
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+
+    return hashArray
+            .map(b => b.toString(16).padStart(2, '0'))
+            .join('');
+}
+
+// 확인 모달 출력 + 해시 생성
+async function showConfirmModal() {
+    const username = document.getElementById('username').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    const password = document.getElementById('password').value;
+
+    // 모달에 입력 정보 표시
+    document.getElementById('confirmUsername').textContent = username;
+    document.getElementById('confirmEmail').textContent = email;
+    document.getElementById('confirmPhone').textContent = phone;
+
+    // SHA-256 해시 생성 → hidden 필드(id="hashedPassword")에 저장
+    const hashed = await hashPassword(password);
+    document.getElementById('hashedPassword').value = hashed;
+
+    // F12 콘솔에서 해시값 확인
+    console.log('해시된 패스워드 :', hashed);
+
+    // Bootstrap 확인 모달 출력
+    const modal = new bootstrap.Modal(
+            document.getElementById('confirmModal')
+    );
+    modal.show();
+}
+
+// 가입하기 버튼 클릭 → form submit
+function submitRegister() {
+    // 확인 모달 닫기
+    bootstrap.Modal.getInstance(
+            document.getElementById('confirmModal')
+    ).hide();
+
+    // form submit → POST /register_check 전송
+    document.getElementById('registerForm').submit();
+}
+```
+
+### 동작 방식
+이 코드는 회원가입 입력값 검사가 모두 통과된 뒤 실행된다.  
+먼저 `showConfirmModal()` 함수가 아이디, 이메일, 연락처, 비밀번호 입력값을 가져온다.  
+아이디, 이메일, 연락처는 확인 모달에 표시하고, 비밀번호는 `hashPassword()` 함수로 전달하여 SHA-256 해시값으로 변환한다.  
+생성된 해시값은 `id="hashedPassword"`인 hidden input에 저장되며, 이 값이 서버로 전송될 비밀번호 값이 된다.  
+그 후 Bootstrap의 `Modal` 객체를 생성하여 확인 모달을 화면에 보여준다.  
+사용자가 모달에서 가입을 확정하면 `submitRegister()` 함수가 실행되어 모달을 닫고 `registerForm.submit()`을 통해 `/register_check`로 회원가입 정보를 POST 전송한다.
+
+---
+
+## 회원가입 확인 모달
+
+아래 코드는 회원가입 정보를 서버로 전송하기 전에 사용자가 입력한 내용을 확인할 수 있도록 Bootstrap 모달을 띄우는 HTML 코드이다.  
+아이디, 이메일, 연락처는 모달에 표시되고, 패스워드는 직접 노출하지 않고 숨김 처리하여 표시한다.
+
+### 기능 설명
+- `modal fade` : Bootstrap 모달 컴포넌트와 부드러운 표시 효과 적용
+- `id="confirmModal"` : JavaScript에서 모달을 찾기 위한 id
+- `modal-dialog-centered` : 모달을 화면 가운데 배치
+- `bg-dark text-white` : 다크 모드 스타일의 모달 적용
+- `data-bs-dismiss="modal"` : 버튼 클릭 시 모달 닫기
+- `confirmUsername` : 입력한 아이디를 표시할 영역
+- `confirmEmail` : 입력한 이메일을 표시할 영역
+- `confirmPhone` : 입력한 연락처를 표시할 영역
+- `******** (암호화 전송)` : 패스워드를 직접 보여주지 않도록 처리
+- `onclick="submitRegister()"` : 가입하기 버튼 클릭 시 회원가입 form 제출
+
+### 코드
+```html
+<!-- 가입 확인 모달 (</section> 아래, </body> 위) -->
+<div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-white border-secondary">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title"> 가입 확인</h5>
+                <button type="button" class="btn-close btn-close-white"
+                    data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <p>아래 정보로 가입하시겠습니까?</p>
+
+                <table class="table table-dark table-bordered">
+                    <tr>
+                        <th>아이디</th>
+                        <td id="confirmUsername"></td>
+                    </tr>
+                    <tr>
+                        <th>이메일</th>
+                        <td id="confirmEmail"></td>
+                    </tr>
+                    <tr>
+                        <th>연락처</th>
+                        <td id="confirmPhone"></td>
+                    </tr>
+                    <tr>
+                        <th>패스워드</th>
+                        <td>******** (암호화 전송)</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-secondary"
+                    data-bs-dismiss="modal">취소</button>
+
+                <button type="button" class="btn btn-primary"
+                    onclick="submitRegister()">가입하기</button>
+            </div>
+        </div>
+    </div>
+</div>
+```
+
+### 동작 방식
+이 모달은 회원가입 입력값 유효성 검사가 모두 통과된 뒤 `showConfirmModal()` 함수에 의해 화면에 표시된다.  
+JavaScript는 사용자가 입력한 아이디, 이메일, 연락처 값을 가져와 각각 `confirmUsername`, `confirmEmail`, `confirmPhone` 영역에 넣는다.  
+패스워드는 보안상 직접 표시하지 않고 `********` 형태로 보여주며, 실제 전송 시에는 SHA-256 해시값이 hidden input에 저장되어 서버로 전달된다.  
+사용자가 취소 버튼을 누르면 `data-bs-dismiss="modal"`에 의해 모달이 닫히고,  
+가입하기 버튼을 누르면 `submitRegister()` 함수가 실행되어 회원가입 form이 `/register_check`로 POST 전송된다.
+
+---
+
+## 회원가입 처리(register_check)
+
+아래 코드는 회원가입 form에서 전달된 사용자 정보를 서버에서 받아 처리하는 코드이다.  
+아이디와 이메일 중복 여부를 먼저 확인하고, 중복이 없으면 새 사용자 정보를 `users` 테이블에 저장한 뒤 가입 완료 페이지로 이동한다.
+
+### 기능 설명
+- `@POST` : POST 요청 처리
+- `@Path("/register_check")` : `/register_check` 경로 지정
+- `@Transactional` : DB 조회 및 저장 작업을 트랜잭션으로 처리
+- `@Consumes(MediaType.APPLICATION_FORM_URLENCODED)` : HTML form 데이터 수신
+- `@Produces(MediaType.TEXT_HTML)` : HTML 응답 형식 사용
+- `@FormParam("username")` : form에서 전송된 아이디 값 받기
+- `@FormParam("password")` : form에서 전송된 SHA-256 패스워드 해시값 받기
+- `@FormParam("email")` : form에서 전송된 이메일 값 받기
+- `@FormParam("phone")` : form에서 전송된 연락처 값 받기
+- `User.findByUsername(username)` : 아이디 중복 확인
+- `User.findByEmail(email)` : 이메일 중복 확인
+- `newUser.persist()` : 새 사용자 정보를 데이터베이스에 저장
+- `Response.seeOther()` : 처리 결과에 따라 다른 페이지로 이동
+
+### 코드
+```java
+@POST // POST 요청 처리
+@Path("/register_check") // /register_check 주소 요청 처리
+@Transactional // DB 조회 및 저장 작업을 트랜잭션으로 처리
+@Consumes(MediaType.APPLICATION_FORM_URLENCODED) // form 데이터 받기
+@Produces(MediaType.TEXT_HTML) // HTML 응답 형식 사용
+public Response registerCheck(
+        @FormParam("username") String username, // form의 name="username" 값 받기
+        @FormParam("password") String password, // SHA-256 해시값 받기
+        @FormParam("email") String email, // form의 name="email" 값 받기
+        @FormParam("phone") String phone) { // form의 name="phone" 값 받기
+
+    // ① 아이디 중복 체크
+    if (User.findByUsername(username) != null) { // 같은 아이디가 이미 있으면
+        return Response
+                .seeOther(URI.create("/register?error=duplicate_username")) // 아이디 중복 오류와 함께 회원가입 페이지로 이동
+                .build(); // 응답 완성
+    }
+
+    // ② 이메일 중복 체크
+    if (User.findByEmail(email) != null) { // 같은 이메일이 이미 있으면
+        return Response
+                .seeOther(URI.create("/register?error=duplicate_email")) // 이메일 중복 오류와 함께 회원가입 페이지로 이동
+                .build(); // 응답 완성
+    }
+
+    // ③ DB 삽입
+    User newUser = new User(); // 새 User 객체 생성
+    newUser.username = username; // 아이디 저장
+    newUser.password = password; // 해시값 저장
+    newUser.email = email; // 이메일 저장
+    newUser.phone = phone; // 연락처 저장
+    newUser.persist(); // DB에 새 사용자 저장
+
+    // ④ 가입 완료 페이지로 이동
+    return Response
+            .seeOther(URI.create("/register_success")) // 회원가입 성공 페이지로 이동
+            .build(); // 응답 완성
+}
+```
+
+### 동작 방식
+이 코드는 사용자가 회원가입 form을 제출했을 때 실행된다.  
+먼저 `@FormParam`을 통해 아이디, 비밀번호 해시값, 이메일, 연락처를 서버에서 받는다.  
+그 다음 `User.findByUsername(username)`으로 아이디 중복 여부를 확인하고, 이미 존재하면 `/register?error=duplicate_username`으로 이동시킨다.  
+아이디가 중복되지 않으면 `User.findByEmail(email)`로 이메일 중복 여부를 확인하고, 이미 존재하면 `/register?error=duplicate_email`로 이동시킨다.  
+두 중복 검사를 모두 통과하면 새 `User` 객체를 만들고, 입력받은 사용자 정보를 저장한 뒤 `persist()`를 사용하여 데이터베이스에 등록한다.  
+회원가입이 완료되면 `/register_success` 페이지로 이동한다.
+
+---
+
+## 회원가입 완료 페이지
+
+아래 코드는 회원가입이 성공적으로 완료된 후 사용자에게 가입 완료 화면을 보여주는 코드이다.  
+서버는 `/register_success` 경로로 들어온 요청을 처리하여 `register_success.html` 파일을 반환하고,  
+HTML 화면에서는 가입 완료 메시지와 로그인 페이지로 이동하는 버튼을 제공한다.
+
+### 기능 설명
+- `@GET` : GET 요청 처리
+- `@Path("/register_success")` : `/register_success` 경로 지정
+- `@Produces(MediaType.TEXT_HTML)` : HTML 형식으로 응답
+- `getResourceAsStream()` : `register_success.html` 파일 읽기
+- `Response.ok(html).build()` : 읽어온 HTML 파일을 정상 응답으로 반환
+- `section.hero` : 가입 완료 화면 영역 구성
+- `container` : 화면 내용의 너비와 배치 조정
+- `href="/login"` : 로그인 페이지로 이동
+- `btn btn-primary w-100` : Bootstrap 버튼 스타일 적용
+
+### Java 코드
+```java
+@GET // GET 요청 처리
+@Path("/register_success") // /register_success 주소 요청 처리
+@Produces(MediaType.TEXT_HTML) // HTML 형식으로 응답
+public Response registerSuccess() { // 회원가입 완료 페이지 요청 처리 메서드
+    InputStream html = getClass()
+            .getClassLoader()
+            .getResourceAsStream(
+                    "META-INF/resources/login/register_success.html"); // 가입 완료 HTML 파일 읽기
+
+    return Response.ok(html).build(); // 읽어온 HTML 파일을 정상 응답으로 반환
+}
+```
+
+### HTML 코드
+```html
+<section class="hero d-flex align-items-center
+    justify-content-center text-center py-5">
+    <div class="container" style="max-width: 400px;">
+        <h2 class="fw-bold mb-4"> 가입 완료!</h2>
+
+        <p class="lead mb-4">
+            환영합니다!<br>
+            가입이 완료되었습니다.<br>
+            로그인 후 서비스를 이용해보세요.
+        </p>
+
+        <a href="/login" class="btn btn-primary w-100">
+            로그인 하러 가기
+        </a>
+    </div>
+</section>
+```
+
+### 동작 방식
+회원가입 처리 메서드에서 사용자 정보 저장이 완료되면 `/register_success` 주소로 이동한다.  
+이 주소로 GET 요청이 들어오면 `registerSuccess()` 메서드가 실행되고,  
+서버는 `META-INF/resources/login/register_success.html` 파일을 읽어온다.  
+그 후 `Response.ok(html).build()`를 통해 해당 HTML 파일을 브라우저에 반환한다.  
+브라우저에는 가입 완료 메시지가 표시되며, 사용자는 `로그인 하러 가기` 버튼을 눌러 `/login` 페이지로 이동할 수 있다.
+
+---
+
+### 12주차 정리
+## 로그인 폼 개선
+
+아래 코드는 로그인 페이지에서 아이디와 패스워드를 입력받는 HTML form 코드이다.  
+사용자가 로그인 버튼을 누르면 바로 서버로 전송되지 않고,  
+JavaScript의 `validateAndLogin()` 함수를 통해 입력값 검사를 먼저 진행한다.  
+또한 로그인 버튼 아래에 회원가입 페이지로 이동할 수 있는 버튼을 추가하였다.
+
+### 기능 설명
+- `section.hero` : 로그인 화면 영역 구성
+- `container` : 로그인 폼의 너비와 배치 조정
+- `form id="loginForm"` : JavaScript에서 form을 선택하기 위한 id
+- `method="POST"` : 입력값을 POST 방식으로 서버에 전송
+- `action="/login_check"` : 로그인 검증 요청을 보낼 서버 경로 지정
+- `id="usernameInput"` / `name="username"` : 아이디 입력값 검사 및 서버 전송
+- `id="passwordInput"` : 사용자가 입력하는 패스워드 입력칸
+- `id="password"` / `name="password"` : 서버로 전송할 패스워드 값을 담는 hidden input
+- `invalid-feedback` : 입력값 오류 메시지 출력 영역
+- `type="button"` : 버튼 클릭 시 바로 submit하지 않고 JavaScript 함수 실행
+- `onclick="validateAndLogin()"` : 로그인 입력값 검사 및 전송 처리
+- `href="/register"` : 회원가입 페이지로 이동
+
+### 코드
+```html
+<!-- 기존 index.html 디자인을 재활용한다. -->
+<section class="hero d-flex align-items-center
+    justify-content-center text-center py-5">
+    <div class="container" style="max-width: 400px;">
+        <h2 class="fw-bold mb-4">로그인</h2>
+
+        <form method="POST" action="/login_check" id="loginForm">
+            <div class="mb-3 text-start">
+                <label class="form-label">아이디</label>
+                <input type="text" class="form-control"
+                    id="usernameInput" name="username" placeholder="4~20자 영문/숫자" required>
+                <div class="invalid-feedback" id="usernameMsg"></div>
+            </div>
+
+            <div class="mb-3 text-start">
+                <label class="form-label">패스워드</label>
+                <input type="password" class="form-control"
+                    id="passwordInput" placeholder="8자 이상, 영문+숫자+특수문자" required>
+                <div class="invalid-feedback" id="passwordMsg"></div>
+                <input type="hidden" id="password" name="password">
+            </div>
+
+            <button type="button" onclick="validateAndLogin()"
+                class="btn btn-primary w-100">로그인</button>
+
+            <!-- 신규 추가 -->
+            <hr>
+
+            <a href="/register"
+                class="btn btn-outline-secondary w-100">
+                회원가입
+            </a>
+        </form>
+    </div>
+</section>
+```
+
+### 동작 방식
+이 코드는 로그인 페이지에서 사용자에게 아이디와 패스워드 입력창을 보여준다.  
+사용자가 로그인 버튼을 누르면 `type="button"` 설정 때문에 form이 바로 제출되지 않고,  
+`onclick="validateAndLogin()"`에 의해 JavaScript 유효성 검사 함수가 먼저 실행된다.  
+입력값에 문제가 있으면 `invalid-feedback` 영역에 오류 메시지를 표시한다.  
+입력값이 올바르면 JavaScript에서 패스워드 값을 hidden input인 `id="password"`에 저장하고,  
+`id="loginForm"`인 form을 `/login_check`로 POST 전송한다.  
+회원가입 버튼을 누르면 `/register` 주소로 이동하여 회원가입 페이지에 접근할 수 있다.
+
+---
+
+## 로그인 패스워드 해시 처리
+
+아래 코드는 로그인 시 사용자가 입력한 패스워드를 서버로 전송하기 전에 SHA-256 해시값으로 변환하는 JavaScript 코드이다.  
+사용자가 로그인 버튼을 누르면 `validateAndLogin()` 함수가 실행되고,  
+`submitLogin()` 함수에서 패스워드를 해시 처리한 뒤 로그인 form을 서버로 전송한다.
+
+### 기능 설명
+- `validateAndLogin()` : 로그인 버튼 클릭 시 실행되는 함수
+- `submitLogin()` : 패스워드 해시 처리 후 form 제출
+- `passwordInput` : 사용자가 실제로 입력하는 패스워드 input
+- `hashPassword(password)` : 입력한 패스워드를 SHA-256 해시값으로 변환
+- `id="password"` : 해시된 패스워드를 저장하는 hidden input
+- `loginForm.submit()` : 로그인 form을 `/login_check`로 POST 전송
+
+### 코드
+```javascript
+function validateAndLogin() {
+    submitLogin(); // 유효성 검사(지난 주 문제)
+}
+
+async function submitLogin() {
+    const password = document.getElementById('passwordInput').value;
+    const hashed = await hashPassword(password);
+    document.getElementById('password').value = hashed;
+    document.getElementById('loginForm').submit();
+}
+```
+
+### 동작 방식
+이 코드는 사용자가 로그인 버튼을 눌렀을 때 실행된다.  
+먼저 `validateAndLogin()` 함수가 실행되고, 그 안에서 `submitLogin()` 함수를 호출한다.  
+`submitLogin()` 함수는 `passwordInput`에서 사용자가 입력한 원본 패스워드를 가져온 뒤,  
+`hashPassword(password)`를 사용해 SHA-256 해시값으로 변환한다.  
+변환된 해시값은 화면에 보이지 않는 hidden input인 `id="password"`에 저장된다.  
+마지막으로 `loginForm.submit()`을 실행하여 아이디와 해시된 패스워드를 `/login_check`로 POST 전송한다.
+
+---
+
+## 메인 페이지 세션 분기
+
+아래 코드는 사용자가 `/` 주소로 접속했을 때 세션에 로그인 정보가 있는지 확인하고,  
+로그인 상태에 따라 서로 다른 메인 페이지를 보여주는 코드이다.
+
+### 기능 설명
+- `@GET` : GET 요청 처리
+- `@Produces(MediaType.TEXT_HTML)` : HTML 형식으로 응답
+- `context.session().get("loginUser")` : 세션에서 로그인 사용자 정보 조회
+- `context.session().id()` : 현재 세션 ID 확인
+- `loginUser != null` : 로그인 상태 판단
+- 삼항 연산자 `? :` : 로그인 여부에 따라 HTML 경로 선택
+- `main_after_login.html` : 로그인한 사용자에게 보여줄 메인 페이지
+- `main_index.html` : 로그인하지 않은 사용자에게 보여줄 기본 메인 페이지
+- `getResourceAsStream(htmlPath)` : 선택된 HTML 파일 읽기
+- `Response.ok(html).build()` : HTML 파일을 정상 응답으로 반환
+
+### 코드
+```java
+// GET / → 세션 유무에 따라 메인 페이지 분기
+@GET // GET 요청 처리
+@Produces(MediaType.TEXT_HTML) // HTML 형식으로 응답
+public Response mainPage() { // 메인 페이지 요청 처리 메서드
+    String loginUser = context.session().get("loginUser"); // 세션에서 로그인 사용자 정보 가져오기
+
+    System.out.println("=== [GET /] 세션 ID : " +
+            context.session().id()); // 현재 세션 ID 출력
+    System.out.println("=== [GET /] loginUser : " + loginUser); // 세션의 loginUser 값 출력
+
+    String htmlPath = (loginUser != null) // loginUser가 있으면 로그인 상태
+            ? "META-INF/resources/login/main_after_login.html" // 로그인 상태일 때 보여줄 페이지
+            : "META-INF/resources/main_index.html"; // 비로그인 상태일 때 보여줄 페이지
+
+    InputStream html =
+            getClass().getClassLoader().getResourceAsStream(htmlPath); // 선택된 HTML 파일 읽기
+
+    return Response.ok(html).build(); // HTML 파일을 정상 응답으로 반환
+}
+```
+
+### 동작 방식
+이 코드는 사용자가 `/` 주소로 접속했을 때 실행된다.  
+먼저 `context.session().get("loginUser")`를 통해 세션에 로그인 사용자 정보가 있는지 확인한다.  
+세션에 `loginUser` 값이 있으면 로그인한 사용자로 판단하여 `META-INF/resources/login/main_after_login.html` 파일을 선택한다.  
+반대로 `loginUser` 값이 없으면 로그인하지 않은 사용자로 판단하여 `META-INF/resources/main_index.html` 파일을 선택한다.  
+선택된 파일 경로는 `htmlPath` 변수에 저장되고, `getResourceAsStream(htmlPath)`를 통해 HTML 파일을 읽어온다.  
+마지막으로 `Response.ok(html).build()`를 사용해 선택된 메인 페이지를 브라우저에 반환한다.
+
+---
+
+## 프로필 및 로그아웃 메뉴 추가
+
+아래 코드는 로그인 후 네비게이션 바에 프로필 메뉴와 로그아웃 버튼을 추가하는 HTML 코드이다.  
+사용자는 프로필 메뉴를 통해 `/profile` 페이지로 이동할 수 있고,  
+로그아웃 버튼을 통해 `/logout` 요청을 보내 로그인 상태를 해제할 수 있다.
+
+### 기능 설명
+- `li.nav-item` : 네비게이션 메뉴 항목 생성
+- `a.nav-link` : Bootstrap 네비게이션 링크 스타일 적용
+- `href="/profile"` : 프로필 페이지로 이동
+- `href="/logout"` : 로그아웃 요청 실행
+- `btn btn-outline-danger` : 로그아웃 링크를 빨간색 테두리 버튼처럼 표시
+- `btn-sm` : 버튼 크기를 작게 설정
+- `px-3` : 버튼 좌우 여백 추가
+
+### 코드
+```html
+<!-- 기존 로그아웃 버튼 앞에 추가 -->
+<li class="nav-item">
+    <a class="nav-link" href="/profile">
+        프로필
+    </a>
+</li>
+
+<li class="nav-item">
+    <a class="nav-link btn btn-outline-danger btn-sm px-3"
+        href="/logout">로그아웃</a>
+</li>
+```
+
+### 동작 방식
+이 코드는 로그인 후 화면의 네비게이션 바에 추가된다.  
+사용자가 `프로필` 링크를 클릭하면 `/profile` 주소로 이동하여 프로필 페이지 요청을 보낸다.  
+사용자가 `로그아웃` 버튼을 클릭하면 `/logout` 주소로 이동하고, 서버의 로그아웃 처리 코드가 실행된다.  
+로그아웃 처리에서는 세션을 삭제하여 로그인 상태를 해제한 뒤 메인 페이지로 이동시킬 수 있다.
+
+---
+
+## 프로필 페이지 처리
+
+아래 코드는 사용자가 `/profile` 주소로 접속했을 때 로그인 상태를 확인하고,  
+로그인한 사용자에게만 프로필 페이지를 보여주는 코드이다.  
+세션에 로그인 정보가 없으면 로그인 페이지로 이동시키고,  
+로그인 정보가 있으면 DB에서 사용자 정보를 조회한 뒤 프로필 화면을 반환한다.
+
+### 기능 설명
+- `@GET` : GET 요청 처리
+- `@Path("/profile")` : `/profile` 경로 지정
+- `@Produces(MediaType.TEXT_HTML)` : HTML 형식으로 응답
+- `context.session().get("loginUser")` : 세션에서 로그인 사용자 정보 확인
+- `loginUser == null` : 로그인하지 않은 사용자 판단
+- `Response.seeOther(URI.create("/login"))` : 로그인하지 않은 사용자를 로그인 페이지로 이동
+- `User.findByUsername(loginUser)` : DB에서 로그인한 사용자 정보 조회
+- `context.session().put("userEmail", user.email)` : 사용자 이메일을 세션에 저장
+- `context.session().put("userPhone", user.phone)` : 사용자 연락처를 세션에 저장
+- `profileImage` : 사용자 프로필 이미지 정보 저장
+- `"default.png"` : 프로필 이미지가 없을 때 사용할 기본 이미지
+- `getResourceAsStream()` : `profile.html` 파일 읽기
+- `Response.ok(html).build()` : 프로필 HTML 페이지 반환
+
+### 코드
+```java
+@GET // GET 요청 처리
+@Path("/profile") // /profile 주소 요청 처리
+@Produces(MediaType.TEXT_HTML) // HTML 형식으로 응답
+public Response profilePage() { // 프로필 페이지 요청 처리 메서드
+
+    // ① 세션 체크 (로그인 안 한 사용자 차단)
+    String loginUser = context.session().get("loginUser"); // 세션에서 로그인 사용자 아이디 가져오기
+
+    if (loginUser == null) { // 로그인 정보가 없으면
+        return Response
+                .seeOther(URI.create("/login")) // 로그인 페이지로 이동
+                .build(); // 응답 완성
+    }
+
+    // ② DB에서 사용자 정보 조회
+    User user = User.findByUsername(loginUser); // 로그인한 아이디로 사용자 정보 조회
+
+    // ③ 세션에 사용자 정보 저장 (HTML에서 활용)
+    context.session().put("userEmail", user.email); // 사용자 이메일을 세션에 저장
+    context.session().put("userPhone", user.phone); // 사용자 연락처를 세션에 저장
+    context.session().put("profileImage",
+            user.profileImage != null ? user.profileImage : "default.png"); // 프로필 이미지가 없으면 기본 이미지 저장
+
+    // ④ 프로필 페이지 반환
+    InputStream html = getClass()
+            .getClassLoader()
+            .getResourceAsStream(
+                    "META-INF/resources/login/profile.html"); // profile.html 파일 읽기
+
+    return Response.ok(html).build(); // 읽어온 HTML 파일을 정상 응답으로 반환
+}
+```
+
+### 동작 방식
+이 코드는 사용자가 `/profile` 주소로 접속했을 때 실행된다.  
+먼저 `context.session().get("loginUser")`를 통해 세션에 로그인 사용자 정보가 있는지 확인한다.  
+세션에 `loginUser` 값이 없으면 로그인하지 않은 사용자로 판단하여 `/login` 페이지로 이동시킨다.  
+로그인 정보가 있으면 `User.findByUsername(loginUser)`를 사용하여 DB에서 해당 사용자의 정보를 조회한다.  
+조회한 사용자의 이메일, 연락처, 프로필 이미지 정보를 세션에 저장하고,  
+프로필 이미지가 없는 경우에는 `"default.png"`를 기본 이미지로 사용한다.  
+마지막으로 `META-INF/resources/login/profile.html` 파일을 읽어와 브라우저에 반환한다.
+
+---
+
+
