@@ -20,6 +20,7 @@
     </script>
 </head>
 <body>
+
     <!-- 주요 내용은 body 안에 있다 -->
     <!-- 헤더 (Navbar) --> 
     <!-- <nav class="navbar navbar-expand-lg navbar-dark">
@@ -40,55 +41,101 @@
         </div>
     </nav> -->
 
-        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container-fluid">
-        <!-- <a class="navbar-brand" href="#">Navbar</a> -->
-        <img src="/images/LOL.webp" alt="" width="30" height="24">
-        <!-- [변경] "Navbar" 텍스트 → 다크/라이트 토글 버튼 -->
-        <button class="btn border-0" id="themeToggleBtn" onclick="toggleTheme()">
-            DARK
-        </button>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-        <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
-            <li class="nav-item">
-            <a class="nav-link active" aria-current="page" href="#">리그홈 </a>
-            </li>
-            <li class="nav-item">
-            <a class="nav-link" href="#">뉴스</a>
-            </li>
-            <li class="nav-item">
-            <a class="nav-link" href="#">챔피언</a>
-            </li>
-            <li class="nav-item">
-            <a class="nav-link" href="main_page_sub/download.html">다운로드</a>
-            </li>
-            <li class="nav-item">
-            <a class="nav-link" href="/login">로그인</a>
-            </li>
-            <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                외부 웹 사이트
-            </a>
-            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                <li><a class="dropdown-item" href="https://www.leagueoflegends.com/ko-kr/">롤 공식 홈</a></li>
-                <li><a class="dropdown-item" href="https://www.fow.lol/">롤 전적</a></li>
-                <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" href="#">롤 유튜브</a></li>
-            </ul>
-            </li>
-            <li class="nav-item">
-            <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">Disabled</a>
-            </li>
-        </ul>
-        <form class="d-flex" id="searchForm">
-            <input class="form-control me-2" type="search" placeholder="챔피언, 뉴스 검색..." aria-label="Search" id="searchInput">
-            <button class="btn btn-outline-success" type="submit">Search</button>
-        </form>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <!-- <a class="navbar-brand" href="#">Navbar</a> -->
+            <img src="/images/LOL.webp" alt="" width="30" height="24">
+
+            <!-- [변경] "Navbar" 텍스트 → 다크/라이트 토글 버튼 -->
+            <button class="btn border-0" id="themeToggleBtn" onclick="toggleTheme()">
+                DARK
+            </button>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="#">
+                            리그홈
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            뉴스
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">
+                            챔피언
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="main_page_sub/download.html">
+                            다운로드
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a class="nav-link" href="/login">
+                            로그인
+                        </a>
+                    </li>
+
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            외부 웹 사이트
+                        </a>
+
+                        <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            <li>
+                                <a class="dropdown-item" href="https://www.leagueoflegends.com/ko-kr/">
+                                    롤 공식 홈
+                                </a>
+                            </li>
+
+                            <li>
+                                <a class="dropdown-item" href="https://www.fow.lol/">
+                                    롤 전적
+                                </a>
+                            </li>
+
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+
+                            <li>
+                                <a class="dropdown-item" href="#">
+                                    롤 유튜브
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <!-- <li class="nav-item">
+                        <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">
+                            Disabled
+                        </a>
+                    </li> -->
+                </ul>
+
+                <form class="d-flex" id="searchForm">
+                    <input class="form-control me-2" type="search" placeholder="챔피언, 뉴스 검색..." aria-label="Search"
+                        id="searchInput">
+
+                    <button class="btn btn-outline-success" type="submit">
+                        Search
+                    </button>
+                </form>
+            </div>
         </div>
-    </div>
     </nav>
 
     <!-- 히어로 배너 (Hero Banner) -->
@@ -985,18 +1032,18 @@
 
 
     <!-- 토스트 컨테이너 </body> 바로 위에 추가 -->
-        <div class="toast-container position-fixed
-    bottom-0 end-0 p-3" style="z-index:9999">
-            <div id="liveToast" class="toast align-items-center
-    text-white bg-success border-0" role="alert">
-                <div class="d-flex">
-                    <div class="toast-body" id="toastBody">
-                        메시지
-                    </div>
-                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+    <div class="toast-container position-fixed
+            bottom-0 end-0 p-3" style="z-index:9999">
+        <div id="liveToast" class="toast align-items-center
+            text-white bg-success border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body" id="toastBody">
+                    메시지
                 </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
             </div>
         </div>
+    </div>
 
 
     
