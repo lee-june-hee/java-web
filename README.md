@@ -2026,4 +2026,1408 @@ public Response profilePage() { // 프로필 페이지 요청 처리 메서드
 
 ---
 
+## User 엔티티에 프로필 이미지 필드 추가
 
+아래 코드는 사용자 정보를 저장하는 `User` 엔티티 클래스이다.  
+기존 사용자 정보인 아이디, 비밀번호, 이메일, 연락처에 더해  
+프로필 사진 파일명을 저장하기 위한 `profileImage` 필드를 추가하였다.
+
+### 기능 설명
+- `@Entity` : 데이터베이스 테이블과 연결되는 엔티티 클래스 선언
+- `@Table(name = "users")` : `users` 테이블과 연결
+- `PanacheEntity` : 기본 `id`와 DB 관련 메서드 사용 가능
+- `username` : 사용자 아이디 저장
+- `password` : 비밀번호 또는 SHA-256 해시값 저장
+- `@Column(unique = true)` : 이메일 중복 방지
+- `email` : 사용자 이메일 저장
+- `phone` : 사용자 연락처 저장
+- `profileImage` : 사용자의 프로필 사진 파일명 저장
+- `findByUsername()` : 아이디로 사용자 조회
+- `findByEmail()` : 이메일로 사용자 조회
+
+### 코드
+```java
+@Entity // 이 클래스가 데이터베이스 테이블과 연결되는 엔티티임을 표시
+@Table(name = "users") // users 테이블과 연결
+public class User extends PanacheEntity { // PanacheEntity를 상속받아 DB 기능 사용
+
+    public String username; // 사용자 아이디
+
+    public String password; // 사용자 비밀번호 또는 SHA-256 해시값
+
+    @Column(unique = true) // 이메일 중복 방지
+    public String email; // 사용자 이메일
+
+    public String phone; // 사용자 연락처
+
+    // 신규 추가 : 프로필 사진 파일명
+    public String profileImage; // 저장된 프로필 이미지 파일명, UUID 기반
+
+    public static User findByUsername(String username) { // 아이디로 사용자 조회
+        return find("username", username).firstResult(); // username이 일치하는 첫 번째 사용자 반환
+    }
+
+    public static User findByEmail(String email) { // 이메일로 사용자 조회
+        return find("email", email).firstResult(); // email이 일치하는 첫 번째 사용자 반환
+    }
+}
+```
+
+### 동작 방식
+이 클래스는 `users` 테이블과 연결되어 사용자 정보를 저장한다.  
+회원가입 시 아이디, 비밀번호 해시값, 이메일, 연락처가 저장되고,  
+프로필 사진을 업로드하면 해당 이미지 파일명이 `profileImage` 필드에 저장된다.  
+이미지 파일 자체를 데이터베이스에 저장하는 것이 아니라, 서버에 저장된 이미지 파일명을 DB에 기록하는 방식이다.  
+프로필 페이지에서는 이 `profileImage` 값을 이용해 사용자의 프로필 사진을 화면에 표시할 수 있다.
+
+---
+
+## 프로필 페이지 화면
+
+아래 코드는 로그인한 사용자가 자신의 프로필 정보를 확인하고,  
+프로필 사진을 업로드할 수 있도록 만든 HTML 코드이다.  
+아이디, 이메일, 연락처를 표 형태로 출력하고,  
+`multipart/form-data` 방식으로 이미지 파일을 `/profile/upload` 경로로 전송한다.
+
+### 기능 설명
+- `section.hero` : 기존 로그인 페이지 디자인을 재활용한 화면 영역
+- `container` : 프로필 화면의 너비와 배치 조정
+- `profileImg` : 프로필 사진을 표시하는 이미지 태그
+- `src="/uploads/profile/default.png"` : 기본 프로필 이미지 경로
+- `rounded-circle` : 프로필 이미지를 원형으로 표시
+- `infoUsername` : 사용자 아이디 출력 영역
+- `infoEmail` : 사용자 이메일 출력 영역
+- `infoPhone` : 사용자 연락처 출력 영역
+- `form id="uploadForm"` : 프로필 사진 업로드 form
+- `method="POST"` : 서버로 데이터 전송
+- `action="/profile/upload"` : 프로필 사진 업로드 처리 경로
+- `enctype="multipart/form-data"` : 파일 업로드를 위한 필수 설정
+- `name="profileImage"` : 서버에서 받을 파일 input 이름
+- `accept="image/jpeg,image/png,image/gif,image/webp"` : 선택 가능한 이미지 파일 형식 제한
+- `type="submit"` : 사진 업로드 버튼 클릭 시 form 제출
+
+### 코드
+```html
+<!-- 기존 로그인 등 페이지의 디자인을 재활용한다. -->
+<section class="hero d-flex align-items-center
+    justify-content-center text-center py-5">
+    <div class="container" style="max-width: 500px;">
+        <h2 class="fw-bold mb-4"> 내 프로필</h2>
+
+        <!-- 프로필 사진 영역 -->
+        <div class="mb-4">
+            <img id="profileImg"
+                src="/uploads/profile/default.png"
+                class="rounded-circle"
+                width="120" height="120"
+                style="object-fit:cover; border:3px solid #fff;"
+                alt="프로필 사진">
+        </div>
+
+        <!-- 개인 정보 출력 -->
+        <div class="card bg-dark text-white border-secondary mb-4">
+            <div class="card-body text-start">
+                <table class="table table-dark table-bordered mb-0">
+                    <tr>
+                        <th style="width:30%">아이디</th>
+                        <td id="infoUsername"></td>
+                    </tr>
+                    <tr>
+                        <th>이메일</th>
+                        <td id="infoEmail"></td>
+                    </tr>
+                    <tr>
+                        <th>연락처</th>
+                        <td id="infoPhone"></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- 사진 업로드 폼 -->
+        <form id="uploadForm"
+            method="POST"
+            action="/profile/upload"
+            enctype="multipart/form-data">
+            <div class="mb-3">
+                <label class="form-label">프로필 사진 변경</label>
+                <input type="file"
+                    class="form-control"
+                    id="profileFile"
+                    name="profileImage"
+                    accept="image/jpeg,image/png,image/gif,image/webp">
+                <div class="form-text text-muted">
+                    jpg, png, gif, webp / 최대 5MB
+                </div>
+            </div>
+
+            <button type="submit"
+                class="btn btn-primary w-100">
+                사진 업로드
+            </button>
+        </form>
+    </div>
+</section>
+
+<!-- JS 연동 -->
+<script src="../js/search.js"></script>
+<script src="../js/toggle.js"></script>
+```
+
+### 동작 방식
+사용자가 `/profile` 페이지에 접속하면 서버는 `profile.html` 파일을 반환한다.  
+화면에는 기본 프로필 이미지와 개인 정보 표가 표시된다.  
+아이디, 이메일, 연락처 값은 JavaScript를 통해 각각 `infoUsername`, `infoEmail`, `infoPhone` 영역에 들어갈 수 있다.  
+프로필 사진을 변경하려면 사용자가 이미지 파일을 선택하고 `사진 업로드` 버튼을 누른다.  
+이때 form은 `multipart/form-data` 방식으로 `/profile/upload` 경로에 POST 요청을 보낸다.  
+서버는 업로드된 이미지를 저장하고, 저장된 파일명을 DB의 `profileImage` 필드에 기록할 수 있다.
+
+---
+
+## 프로필 정보 조회 및 화면 출력
+
+아래 코드는 프로필 페이지가 로딩되었을 때 서버에서 로그인한 사용자의 정보를 가져와 화면에 출력하는 JavaScript 코드이다.  
+`fetch()`를 사용하여 `/profile/info` 주소로 사용자 정보를 요청하고, 서버에서 받은 JSON 데이터를 HTML 요소에 넣어 프로필 페이지를 완성한다.
+
+### 기능 설명
+- `window.onload` : 페이지 로딩 완료 후 실행
+- `fetch('/profile/info')` : 서버에 로그인한 사용자 정보 요청
+- `res.json()` : 서버 응답을 JSON 데이터로 변환
+- `data.username` : 사용자 아이디
+- `data.email` : 사용자 이메일
+- `data.phone` : 사용자 연락처
+- `data.profileImage` : 사용자 프로필 이미지 파일명
+- `textContent` : HTML 요소 안에 텍스트 출력
+- `profileImg.src` : 프로필 이미지 경로 변경
+- `/uploads/profile/` : 업로드된 프로필 이미지가 저장되는 경로
+
+### 코드
+```javascript
+window.onload = function() {
+    fetch('/profile/info')
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('infoUsername').textContent
+                    = data.username;
+
+            document.getElementById('infoEmail').textContent
+                    = data.email;
+
+            document.getElementById('infoPhone').textContent
+                    = data.phone;
+
+            if (data.profileImage) {
+                document.getElementById('profileImg').src
+                        = '/uploads/profile/' + data.profileImage;
+            }
+        });
+}
+```
+
+### 동작 방식
+이 코드는 프로필 페이지가 로딩된 뒤 자동으로 실행된다.  
+먼저 `fetch('/profile/info')`를 사용하여 서버에 로그인한 사용자 정보를 요청한다.  
+서버가 사용자 정보를 JSON 형태로 응답하면 `res.json()`을 통해 JavaScript에서 사용할 수 있는 객체로 변환한다.  
+그 후 `data.username`, `data.email`, `data.phone` 값을 각각 `infoUsername`, `infoEmail`, `infoPhone` 요소에 출력한다.  
+또한 `data.profileImage` 값이 존재하면 `/uploads/profile/` 경로와 파일명을 합쳐 `profileImg`의 `src`를 변경하여 사용자의 프로필 사진을 화면에 표시한다.
+
+---
+
+## 프로필 정보 JSON API
+
+아래 코드는 프로필 페이지에서 사용할 사용자 정보를 JSON으로 반환하는 API 코드이다.  
+프로필 페이지의 JavaScript는 `/profile/info`로 요청을 보내고,  
+서버는 로그인한 사용자의 아이디, 이메일, 연락처, 프로필 이미지 파일명을 JSON 형태로 응답한다.
+
+### 기능 설명
+- `@GET` : GET 요청 처리
+- `@Path("/profile/info")` : `/profile/info` 경로 지정
+- `@Produces(MediaType.APPLICATION_JSON)` : JSON 형식으로 응답
+- `context.session().get("loginUser")` : 세션에서 로그인 사용자 정보 확인
+- `Response.status(401)` : 로그인하지 않은 사용자에게 인증 실패 응답 반환
+- `User.findByUsername(loginUser)` : DB에서 로그인한 사용자 정보 조회
+- `Map.of()` : JSON으로 변환할 key-value 데이터 생성
+- `username` : 사용자 아이디
+- `email` : 사용자 이메일
+- `phone` : 사용자 연락처
+- `profileImage` : 사용자 프로필 이미지 파일명
+
+### 코드
+```java
+@GET // GET 요청 처리
+@Path("/profile/info") // /profile/info 주소 요청 처리
+@Produces(MediaType.APPLICATION_JSON) // JSON 형식으로 응답
+public Response profileInfo() { // 프로필 정보 요청 처리 메서드
+
+    // 세션 체크
+    String loginUser = context.session().get("loginUser"); // 세션에서 로그인 사용자 아이디 가져오기
+
+    if (loginUser == null) { // 로그인 정보가 없으면
+        return Response.status(401).build(); // 401 Unauthorized 응답 반환
+    }
+
+    // DB 조회
+    User user = User.findByUsername(loginUser); // 로그인한 아이디로 사용자 정보 조회
+
+    // JSON 응답
+    return Response.ok(
+            Map.of(
+                    "username", user.username, // 사용자 아이디
+                    "email", user.email != null ? user.email : "", // 이메일이 없으면 빈 문자열
+                    "phone", user.phone != null ? user.phone : "", // 연락처가 없으면 빈 문자열
+                    "profileImage", user.profileImage != null
+                            ? user.profileImage : "" // 프로필 이미지가 없으면 빈 문자열
+            )
+    ).build(); // JSON 응답 완성
+}
+```
+
+### 동작 방식
+프로필 페이지가 열리면 JavaScript에서 `fetch('/profile/info')` 요청을 보낸다.  
+서버는 먼저 세션에서 `loginUser` 값을 확인하여 로그인 여부를 판단한다.  
+로그인 정보가 없으면 사용자 정보를 반환하지 않고 `401 Unauthorized` 응답을 보낸다.  
+로그인 정보가 있으면 `User.findByUsername(loginUser)`를 통해 DB에서 해당 사용자 정보를 조회한다.  
+그 후 아이디, 이메일, 연락처, 프로필 이미지 파일명을 `Map.of()`에 담아 JSON 형태로 응답한다.  
+JavaScript는 이 JSON 데이터를 받아 프로필 페이지의 아이디, 이메일, 연락처, 프로필 사진 영역에 출력한다.
+
+---
+
+## 프로필 사진 업로드 처리
+
+아래 코드는 로그인한 사용자가 프로필 사진을 업로드했을 때 서버에서 처리하는 코드이다.  
+업로드된 파일의 확장자와 크기를 검사하고, 문제가 없으면 UUID 기반 새 파일명으로 서버에 저장한 뒤  
+DB의 `profileImage` 필드를 새 파일명으로 업데이트한다.
+
+### 기능 설명
+- `@POST` : POST 요청 처리
+- `@Path("/profile/upload")` : 프로필 사진 업로드 경로 지정
+- `@Transactional` : DB 업데이트 작업을 트랜잭션으로 처리
+- `@Consumes(MediaType.MULTIPART_FORM_DATA)` : 파일 업로드 데이터 수신
+- `@RestForm("profileImage")` : form에서 `name="profileImage"`로 전송된 파일 받기
+- `context.session().get("loginUser")` : 로그인 사용자 확인
+- `file.fileName()` : 업로드한 원본 파일명 확인
+- `ext.matches("jpg|jpeg|png|gif|webp")` : 이미지 확장자 검사
+- `file.size()` : 업로드 파일 크기 확인
+- `UUID.randomUUID()` : 중복되지 않는 새 파일명 생성
+- `Files.createDirectories()` : 업로드 폴더 생성
+- `Files.copy()` : 업로드 파일 저장
+- `User.findByUsername(loginUser)` : 로그인한 사용자 정보 조회
+- `user.profileImage = newFileName` : DB에 저장된 프로필 이미지 파일명 변경
+- `Response.seeOther()` : 업로드 결과에 따라 페이지 이동
+
+### 코드
+```java
+@POST // POST 요청 처리
+@Path("/profile/upload") // /profile/upload 주소 요청 처리
+@Transactional // DB 업데이트 작업을 트랜잭션으로 처리
+@Consumes(MediaType.MULTIPART_FORM_DATA) // 파일 업로드 형식 데이터 받기
+public Response profileUpload(
+        @RestForm("profileImage") FileUpload file) { // name="profileImage"로 전송된 파일 받기
+
+    // ① 세션 체크
+    String loginUser = context.session().get("loginUser"); // 세션에서 로그인 사용자 아이디 가져오기
+
+    if (loginUser == null) { // 로그인 정보가 없으면
+        return Response
+                .seeOther(URI.create("/login")) // 로그인 페이지로 이동
+                .build(); // 응답 완성
+    }
+
+    try { // 파일 처리 중 예외 발생 가능
+
+        // ② 확장자 검사
+        String original = file.fileName(); // 업로드한 원본 파일명 가져오기
+        String ext = original.substring(
+                original.lastIndexOf('.') + 1).toLowerCase(); // 확장자 추출 후 소문자로 변환
+
+        if (!ext.matches("jpg|jpeg|png|gif|webp")) { // 허용된 이미지 확장자가 아니면
+            return Response
+                    .seeOther(URI.create("/profile?error=invalid_type")) // 잘못된 파일 형식 오류
+                    .build(); // 응답 완성
+        }
+
+        // ③ 파일 크기 검사 (5MB)
+        if (file.size() > 5 * 1024 * 1024) { // 파일 크기가 5MB보다 크면
+            return Response
+                    .seeOther(URI.create("/profile?error=too_large")) // 파일 크기 초과 오류
+                    .build(); // 응답 완성
+        }
+
+        // ④ UUID 파일명 생성 + 저장
+        String newFileName = UUID.randomUUID() + "." + ext; // UUID 기반 새 파일명 생성
+
+        java.nio.file.Path uploadDir = Paths.get(
+                "src/main/resources/META-INF/resources/uploads/profile"); // 업로드 폴더 경로 지정
+
+        java.nio.file.Files.createDirectories(uploadDir); // 업로드 폴더가 없으면 생성
+
+        java.nio.file.Files.copy(file.uploadedFile(),
+                uploadDir.resolve(newFileName),
+                java.nio.file.StandardCopyOption.REPLACE_EXISTING); // 업로드 파일을 새 이름으로 저장
+
+        // ⑤ DB 업데이트
+        User user = User.findByUsername(loginUser); // 로그인한 사용자 정보 조회
+        user.profileImage = newFileName; // DB에 저장할 프로필 이미지 파일명 수정
+
+        return Response
+                .seeOther(URI.create("/profile")) // 업로드 성공 후 프로필 페이지로 이동
+                .build(); // 응답 완성
+
+    } catch (Exception e) { // 업로드 중 오류 발생 시
+        return Response
+                .seeOther(URI.create("/profile?error=upload_fail")) // 업로드 실패 오류
+                .build(); // 응답 완성
+    }
+}
+```
+
+### 동작 방식
+사용자가 프로필 페이지에서 이미지를 선택하고 사진 업로드 버튼을 누르면 `/profile/upload`로 POST 요청이 전송된다.  
+서버는 먼저 세션의 `loginUser` 값을 확인하여 로그인 여부를 검사한다.  
+로그인 정보가 없으면 `/login` 페이지로 이동시키고, 로그인 상태라면 업로드된 파일을 검사한다.  
+먼저 원본 파일명에서 확장자를 추출하고, `jpg`, `jpeg`, `png`, `gif`, `webp` 중 하나인지 확인한다.  
+허용되지 않은 확장자이면 `/profile?error=invalid_type`으로 이동한다.  
+그 다음 파일 크기가 5MB를 초과하는지 확인하고, 초과하면 `/profile?error=too_large`로 이동한다.  
+검사를 통과하면 UUID 기반의 새 파일명을 만들고, 업로드 폴더가 없으면 생성한 뒤 파일을 저장한다.  
+마지막으로 로그인한 사용자를 DB에서 조회하고, `profileImage` 필드를 새 파일명으로 변경한다.  
+처리가 완료되면 다시 `/profile` 페이지로 이동한다.
+
+---
+
+## 13주차 수업 내용
+## 메인 페이지 로딩 알림 변경
+
+기존에는 메인 페이지가 로딩되면 `alert()`를 사용하여 브라우저 기본 알림창을 띄웠다.  
+하지만 `alert()`는 사용자가 확인 버튼을 누르기 전까지 화면 조작을 막기 때문에,  
+더 자연스러운 알림을 위해 `showToast()`를 사용하도록 변경하였다.
+
+### 변경 전 코드
+```html
+<script>
+window.onload = function() {
+    alert("메인 페이지 로딩 완료");
+}
+</script>
+```
+
+### 변경 후 코드
+```html
+<script>
+window.onload = function() {
+    showToast('메인 페이지 로딩 완료');
+}
+</script>
+```
+
+### 동작 방식
+페이지 로딩이 완료되면 `window.onload` 함수가 실행된다.  
+기존에는 `alert()`를 통해 알림창을 띄웠지만, 수정 후에는 `showToast()` 함수를 실행하여 토스트 알림을 표시한다.  
+이를 통해 사용자는 페이지 이용을 방해받지 않고 자연스럽게 로딩 완료 메시지를 확인할 수 있다.
+
+---
+
+## Toast 알림 함수 추가
+
+아래 코드는 Bootstrap Toast를 사용하여 화면에 알림 메시지를 표시하는 JavaScript 함수이다.  
+기존의 `alert()` 방식은 사용자가 확인 버튼을 누르기 전까지 화면 조작을 막지만,  
+Toast 알림은 화면 한쪽에 자연스럽게 표시되고 일정 시간이 지나면 자동으로 사라진다.
+
+### 기능 설명
+
+- `showToast(message, type)` : Toast 알림 표시 함수
+- `message` : 화면에 보여줄 메시지
+- `type` : Toast 색상 종류
+- `type = 'success'` : type을 생략하면 기본값으로 success 사용
+- `liveToast` : Toast 전체 HTML 요소
+- `toastBody` : Toast 메시지가 들어갈 영역
+- `bg-${type}` : type 값에 따라 Bootstrap 배경색 변경
+- `bootstrap.Toast` : Bootstrap Toast 기능 실행
+- `delay: 3000` : 3초 후 자동으로 사라짐
+
+### 코드
+
+```javascript
+// test.js 수정 → Toast 함수 제공
+function showToast(message, type = 'success') {
+    // type : 'success' (초록) / 'danger' (빨강) / 'warning' (노랑)
+
+    const toastEl = document.getElementById('liveToast');
+    const toastBody = document.getElementById('toastBody');
+
+    if (!toastEl || !toastBody) return;
+
+    // 색상 클래스 변경
+    toastEl.className =
+            `toast align-items-center text-white bg-${type} border-0`;
+
+    toastBody.textContent = message;
+
+    // Bootstrap Toast 실행
+    const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
+    toast.show();
+}
+```
+
+### 사용 예시
+
+```javascript
+showToast('메인 페이지 로딩 완료');
+showToast('로그인 실패', 'danger');
+showToast('입력값을 확인해주세요.', 'warning');
+```
+
+### 동작 방식
+
+다른 JavaScript 코드에서 `showToast()` 함수를 호출하면,  
+먼저 HTML에서 `liveToast`와 `toastBody` 요소를 찾는다.  
+요소가 존재하면 `type` 값에 따라 Toast의 배경색 클래스를 설정하고,  
+`toastBody`에 전달받은 메시지를 넣는다.  
+그 다음 `bootstrap.Toast` 객체를 생성하고 `toast.show()`를 실행하여 알림을 화면에 표시한다.  
+`delay: 3000` 설정으로 인해 Toast는 3초 후 자동으로 사라진다.
+
+---
+
+## Toast 컨테이너 추가
+
+아래 코드는 Bootstrap Toast 알림을 화면에 표시하기 위한 HTML 구조이다.  
+JavaScript의 `showToast()` 함수가 `liveToast`와 `toastBody` 요소를 찾아 메시지를 넣고,  
+Bootstrap Toast 기능을 실행하여 화면 오른쪽 아래에 알림을 표시한다.
+
+### 기능 설명
+
+- `toast-container` : Toast 알림을 담는 컨테이너
+- `position-fixed` : 화면에 고정
+- `bottom-0` : 화면 아래쪽 배치
+- `end-0` : 화면 오른쪽 배치
+- `p-3` : 여백 추가
+- `z-index:9999` : 다른 요소보다 위에 표시
+- `id="liveToast"` : JavaScript에서 Toast 전체 요소를 찾기 위한 id
+- `id="toastBody"` : JavaScript에서 메시지를 넣기 위한 id
+- `bg-success` : 기본 초록색 배경
+- `data-bs-dismiss="toast"` : 닫기 버튼 클릭 시 Toast 닫기
+
+### 코드
+
+```html
+<!-- 토스트 컨테이너 </body> 바로 위에 추가 -->
+<div class="toast-container position-fixed
+    bottom-0 end-0 p-3" style="z-index:9999">
+    <div id="liveToast" class="toast align-items-center
+        text-white bg-success border-0" role="alert">
+        <div class="d-flex">
+            <div class="toast-body" id="toastBody">
+                메시지
+            </div>
+            <button type="button"
+                class="btn-close btn-close-white me-2 m-auto"
+                data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+```
+
+### 동작 방식
+
+이 코드는 HTML 문서의 `</body>` 태그 바로 위에 추가한다.  
+페이지 안에 이 Toast 구조가 있어야 JavaScript의 `showToast()` 함수가 정상적으로 동작한다.  
+`showToast()` 함수는 `id="liveToast"` 요소를 찾아 Bootstrap Toast 객체를 만들고,  
+`id="toastBody"` 요소에 전달받은 메시지를 넣는다.  
+그 후 Toast가 화면 오른쪽 아래에 표시되며, 일정 시간이 지나면 자동으로 사라지거나 닫기 버튼을 눌러 직접 닫을 수 있다.
+
+### 사용 예시
+
+```javascript
+showToast('메인 페이지 로딩 완료');
+showToast('로그인 실패', 'danger');
+showToast('입력값을 확인해주세요.', 'warning');
+```
+
+---
+
+## 프로필 메뉴 Tooltip 추가
+
+아래 코드는 네비게이션 바의 프로필 링크에 Bootstrap Tooltip 기능을 추가한 코드이다.  
+사용자가 프로필 메뉴 위에 마우스를 올리면 추가 설명을 보여줄 수 있으며,  
+프로필 메뉴를 클릭하면 `/profile` 페이지로 이동한다.
+
+### 기능 설명
+
+- `a.nav-link` : Bootstrap 네비게이션 링크 스타일 적용
+- `href="/profile"` : 프로필 페이지로 이동
+- `id="profileNavLink"` : JavaScript에서 프로필 링크를 선택하기 위한 id
+- `data-bs-toggle="tooltip"` : Bootstrap Tooltip 기능 사용
+- `data-bs-placement="bottom"` : Tooltip을 링크 아래쪽에 표시
+- `title` : Tooltip에 표시할 기본 문구
+
+### 코드
+
+```html
+<!-- 기존 프로필 버튼 수정 -->
+<a class="nav-link" href="/profile"
+    id="profileNavLink"
+    data-bs-toggle="tooltip"
+    data-bs-placement="bottom"
+    title="내 프로필 보기">프로필</a>
+```
+
+### 동작 방식
+
+이 코드는 로그인 후 네비게이션 바의 프로필 메뉴에 적용된다.  
+사용자가 프로필 링크 위에 마우스를 올리면 Bootstrap Tooltip이 표시되고,  
+Tooltip은 `data-bs-placement="bottom"` 설정에 따라 링크 아래쪽에 나타난다.  
+또한 `id="profileNavLink"`를 지정했기 때문에 JavaScript에서 이 요소를 찾아 로그인한 사용자 이름이나 추가 안내 문구를 Tooltip으로 설정할 수 있다.
+
+---
+
+## 프로필 메뉴 Tooltip에 사용자 이름 표시
+
+아래 코드는 서버에서 로그인한 사용자 정보를 가져와 네비게이션 바의 프로필 메뉴에 Tooltip으로 표시하는 JavaScript 코드이다.  
+`/profile/info` API에서 사용자 정보를 JSON으로 받아오고, `profileNavLink` 요소에 사용자 아이디를 Tooltip 제목으로 설정한다.
+
+### 기능 설명
+
+- `fetch('/profile/info')` : 서버에서 로그인한 사용자 정보 요청
+- `res.json()` : 서버 응답을 JSON으로 변환
+- `data.username` : 로그인한 사용자 아이디
+- `profileNavLink` : 네비게이션 바의 프로필 링크
+- `setAttribute('data-bs-title', data.username)` : Tooltip에 표시할 사용자 이름 설정
+- `new bootstrap.Tooltip(profileLink)` : Bootstrap Tooltip 기능 실행
+
+### 코드
+
+```javascript
+// 회원 정보 읽고, JSON 형태 변환 후 화면 갱신(비동기 처리)
+fetch('/profile/info')
+    .then(res => res.json())
+    .then(data => {
+        const profileLink = document.getElementById('profileNavLink');
+
+        if (profileLink) {
+            profileLink.setAttribute('data-bs-title', data.username);
+            new bootstrap.Tooltip(profileLink);
+        }
+    });
+```
+
+### 동작 방식
+
+페이지가 로딩되면 JavaScript에서 `/profile/info` 주소로 요청을 보낸다.  
+서버는 세션에 저장된 로그인 사용자 정보를 확인하고, 아이디, 이메일, 연락처, 프로필 이미지 정보를 JSON으로 반환한다.  
+JavaScript는 응답 데이터를 `data`로 받은 뒤 `id="profileNavLink"`인 프로필 링크를 찾는다.  
+프로필 링크가 존재하면 `data-bs-title` 속성에 `data.username` 값을 넣고,  
+`new bootstrap.Tooltip(profileLink)`를 실행하여 Bootstrap Tooltip 기능을 활성화한다.  
+그 결과 사용자가 프로필 메뉴에 마우스를 올리면 로그인한 사용자 아이디가 Tooltip으로 표시된다.
+
+---
+
+## 개인정보 수정 폼 추가
+
+아래 코드는 프로필 페이지에서 사용자가 이메일과 연락처를 수정할 수 있도록 만든 HTML 코드이다.  
+프로필 사진 업로드 폼 아래에 `개인정보 수정` 버튼을 추가하고,  
+버튼을 누르면 Bootstrap Collapse 기능을 이용해 숨겨져 있던 수정 폼이 펼쳐진다.
+
+### 기능 설명
+
+- `hr.my-4` : 사진 업로드 영역과 개인정보 수정 영역 구분
+- `btn btn-warning` : 개인정보 수정 버튼 스타일
+- `data-bs-toggle="collapse"` : Bootstrap Collapse 기능 사용
+- `data-bs-target="#updateFormArea"` : 펼칠 수정 영역 지정
+- `collapse` : 기본적으로 숨겨진 영역
+- `id="updateFormArea"` : 수정 폼 영역 id
+- `id="updateMsg"` : 수정 결과 메시지 표시 영역
+- `form id="updateForm"` : 개인정보 수정 form
+- `method="POST"` : POST 방식으로 서버에 전송
+- `action="/profile/update"` : 개인정보 수정 요청을 처리할 서버 경로
+- `id="updateEmail"` / `name="email"` : 수정할 이메일 입력값
+- `id="updatePhone"` / `name="phone"` : 수정할 연락처 입력값
+- `invalid-feedback` : 입력값 오류 메시지 표시 영역
+- `onclick="validateAndUpdate()"` : 수정 완료 버튼 클릭 시 JavaScript 검사 함수 실행
+
+### 코드
+
+```html
+<!-- 사진 업로드 폼 아래에 추가 -->
+<hr class="my-4">
+
+<!-- 토글 버튼 -->
+<button class="btn btn-warning w-100 mb-2"
+    type="button"
+    data-bs-toggle="collapse"
+    data-bs-target="#updateFormArea"
+    aria-expanded="false">
+    개인정보 수정
+</button>
+
+<!-- 기본 숨김 → 버튼 클릭 시 펼쳐짐 -->
+<div class="collapse" id="updateFormArea">
+    <div class="card card-body bg-dark
+        text-white border-secondary mt-2">
+
+        <!-- 수정 결과 메시지 -->
+        <div id="updateMsg" class="alert d-none mb-3"></div>
+
+        <form id="updateForm"
+            method="POST"
+            action="/profile/update">
+
+            <div class="mb-3 text-start">
+                <label class="form-label">이메일</label>
+                <input type="text" class="form-control"
+                    id="updateEmail" name="email"
+                    placeholder="example@email.com">
+                <div class="invalid-feedback" id="updateEmailMsg"></div>
+            </div>
+
+            <div class="mb-3 text-start">
+                <label class="form-label">연락처</label>
+                <input type="text" class="form-control"
+                    id="updatePhone" name="phone"
+                    placeholder="010-0000-0000">
+                <div class="invalid-feedback" id="updatePhoneMsg"></div>
+            </div>
+
+            <button type="button"
+                class="btn btn-warning w-100"
+                onclick="validateAndUpdate()">
+                수정 완료
+            </button>
+        </form>
+    </div>
+</div>
+```
+
+### 동작 방식
+
+프로필 페이지에서 사진 업로드 폼 아래에 `개인정보 수정` 버튼이 표시된다.  
+처음에는 `id="updateFormArea"` 영역이 `collapse` 클래스 때문에 숨겨져 있다.  
+사용자가 `개인정보 수정` 버튼을 클릭하면 Bootstrap Collapse 기능이 실행되어 수정 폼이 펼쳐진다.  
+수정 폼에는 이메일과 연락처 입력칸이 있으며, 각각 `name="email"`, `name="phone"` 값으로 서버에 전송될 수 있다.  
+사용자가 `수정 완료` 버튼을 누르면 `validateAndUpdate()` 함수가 실행된다.  
+이 함수에서 이메일과 연락처 형식을 검사하고, 문제가 없으면 `id="updateForm"`인 form을 `/profile/update`로 POST 전송할 수 있다.
+
+---
+
+## 프로필 정보 조회 및 화면 자동 갱신
+
+아래 코드는 프로필 페이지에서 `/profile/info` API를 호출하여  
+로그인한 사용자의 정보를 가져오고, 화면의 여러 영역을 자동으로 갱신하는 JavaScript 코드이다.
+
+### 기능 설명
+
+- `fetch('/profile/info')` : 서버에서 로그인한 사용자 정보 요청
+- `res.json()` : 서버 응답을 JSON으로 변환
+- `data.username` : 사용자 아이디
+- `data.email` : 사용자 이메일
+- `data.phone` : 사용자 연락처
+- `data.profileImage` : 사용자 프로필 이미지 파일명
+- `infoUsername` : 프로필 표의 아이디 출력 영역
+- `infoEmail` : 프로필 표의 이메일 출력 영역
+- `infoPhone` : 프로필 표의 연락처 출력 영역
+- `profileImg` : 프로필 이미지 출력 영역
+- `updateEmail` : 개인정보 수정 폼의 이메일 입력칸
+- `updatePhone` : 개인정보 수정 폼의 연락처 입력칸
+- `profileNavLink` : 네비게이션 바의 프로필 링크
+- `data-bs-title` : Bootstrap Tooltip에 표시할 문구
+- `new bootstrap.Tooltip()` : Tooltip 기능 실행
+
+### 코드
+
+```javascript
+fetch('/profile/info')
+    .then(res => res.json())
+    .then(data => {
+        // 기존 정보 테이블 표시
+        document.getElementById('infoUsername').textContent = data.username;
+        document.getElementById('infoEmail').textContent = data.email;
+        document.getElementById('infoPhone').textContent = data.phone;
+
+        if (data.profileImage) {
+            document.getElementById('profileImg').src =
+                    '/uploads/profile/' + data.profileImage;
+        }
+
+        // 수정 폼에 기존 값 자동 채우기
+        document.getElementById('updateEmail').value = data.email;
+        document.getElementById('updatePhone').value = data.phone;
+
+        // Tooltip으로 사용자명 표시
+        const profileLink = document.getElementById('profileNavLink');
+
+        if (profileLink) {
+            profileLink.setAttribute('data-bs-title', data.username);
+            new bootstrap.Tooltip(profileLink);
+        }
+    });
+```
+
+### 동작 방식
+
+프로필 페이지가 로딩되면 JavaScript가 `/profile/info`로 요청을 보낸다.  
+서버는 세션에 저장된 로그인 사용자 정보를 확인하고, 해당 사용자의 아이디, 이메일, 연락처, 프로필 이미지 파일명을 JSON으로 반환한다.
+
+JavaScript는 받은 데이터를 이용해 프로필 정보 표의 `infoUsername`, `infoEmail`, `infoPhone` 영역을 갱신한다.  
+또한 `profileImage` 값이 있으면 `/uploads/profile/파일명` 형태로 이미지 경로를 만들어 `profileImg`의 `src`를 변경한다.
+
+그리고 개인정보 수정 폼의 `updateEmail`, `updatePhone` 입력칸에도 기존 값을 자동으로 넣어준다.  
+마지막으로 네비게이션 바의 `profileNavLink` 요소에 사용자 아이디를 Tooltip 제목으로 설정하고, Bootstrap Tooltip을 실행한다.
+
+---
+
+## 개인정보 수정 입력값 검사
+
+아래 코드는 프로필 페이지에서 이메일과 연락처를 수정할 때 사용하는 JavaScript 유효성 검사 코드이다.  
+사용자가 `수정 완료` 버튼을 누르면 이메일과 연락처 형식을 검사하고,  
+입력값이 올바르지 않으면 오류 메시지를 표시한다.  
+모든 검사를 통과하면 개인정보 수정 form을 `/profile/update`로 전송한다.
+
+### 기능 설명
+
+- `validateAndUpdate()` : 개인정보 수정 입력값 검사 함수
+- `updateEmail` : 수정할 이메일 입력칸
+- `updatePhone` : 수정할 연락처 입력칸
+- `emailRegex` : 이메일 형식 검사 정규식
+- `phoneRegex` : `010-0000-0000` 형식 검사 정규식
+- `showFieldError()` : 특정 입력칸에 오류 스타일과 메시지 표시
+- `clearFieldError()` : 오류 스타일 제거 후 정상 스타일 추가
+- `is-invalid` : Bootstrap 오류 표시 클래스
+- `is-valid` : Bootstrap 정상 표시 클래스
+- `updateForm.submit()` : 검사를 통과하면 개인정보 수정 form 전송
+
+### 코드
+
+```javascript
+function validateAndUpdate() {
+    let valid = true;
+
+    const email = document.getElementById('updateEmail').value.trim();
+    const phone = document.getElementById('updatePhone').value.trim();
+
+    // ① 이메일 형식 검사
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        showFieldError('updateEmail', 'updateEmailMsg',
+                '올바른 이메일 형식이 아닙니다.');
+        valid = false;
+    } else {
+        clearFieldError('updateEmail');
+    }
+
+    // ② 연락처 형식 검사
+    const phoneRegex = /^010-\d{4}-\d{4}$/;
+    if (!phoneRegex.test(phone)) {
+        showFieldError('updatePhone', 'updatePhoneMsg',
+                '010-0000-0000 형식으로 입력해주세요.');
+        valid = false;
+    } else {
+        clearFieldError('updatePhone');
+    }
+
+    if (valid) document.getElementById('updateForm').submit();
+}
+
+// profile.js 전용 showError / clearError
+function showFieldError(fieldId, msgId, message) {
+    const field = document.getElementById(fieldId);
+    field.classList.add('is-invalid');
+
+    const msg = document.getElementById(msgId);
+    if (msg) msg.textContent = message;
+}
+
+function clearFieldError(fieldId) {
+    const field = document.getElementById(fieldId);
+    field.classList.remove('is-invalid');
+    field.classList.add('is-valid');
+}
+```
+
+### 동작 방식
+
+사용자가 프로필 페이지에서 개인정보 수정 폼을 열고 이메일과 연락처를 입력한 뒤 `수정 완료` 버튼을 누르면 `validateAndUpdate()` 함수가 실행된다.  
+이 함수는 먼저 `updateEmail`과 `updatePhone` 입력값을 가져오고, 각각 정규식을 사용하여 형식을 검사한다.  
+
+이메일이 올바른 형식이 아니면 `showFieldError()`를 호출하여 이메일 입력칸에 `is-invalid` 클래스를 추가하고 오류 메시지를 표시한다.  
+연락처가 `010-0000-0000` 형식이 아니면 연락처 입력칸에 오류 메시지를 표시한다.  
+
+두 입력값이 모두 올바르면 `document.getElementById('updateForm').submit()`을 실행하여 개인정보 수정 form을 `/profile/update`로 POST 전송한다.
+
+---
+
+## 개인정보 수정 처리
+
+아래 코드는 프로필 페이지에서 사용자가 이메일과 연락처를 수정했을 때 서버에서 처리하는 코드이다.  
+세션을 확인하여 로그인한 사용자만 수정할 수 있도록 하고,  
+이메일이 다른 사용자와 중복되는지 확인한 뒤 DB의 사용자 정보를 수정한다.
+
+### 기능 설명
+
+- `@POST` : POST 요청 처리
+- `@Path("/profile/update")` : 개인정보 수정 경로 지정
+- `@Transactional` : DB 수정 작업을 트랜잭션으로 처리
+- `@Consumes(MediaType.APPLICATION_FORM_URLENCODED)` : 일반 form 데이터 수신
+- `@FormParam("email")` : form에서 전송된 이메일 값 받기
+- `@FormParam("phone")` : form에서 전송된 연락처 값 받기
+- `context.session().get("loginUser")` : 로그인 사용자 확인
+- `Response.seeOther(URI.create("/login"))` : 로그인하지 않은 사용자를 로그인 페이지로 이동
+- `User.findByEmail(email)` : 이메일 중복 확인
+- `found != null && !found.username.equals(loginUser)` : 본인을 제외한 이메일 중복 검사
+- `User.findByUsername(loginUser)` : 현재 로그인한 사용자 정보 조회
+- `user.email = email` : 이메일 수정
+- `user.phone = phone` : 연락처 수정
+- `/profile?success=updated` : 수정 성공 후 프로필 페이지로 이동
+
+### 코드
+
+```java
+@POST // POST 요청 처리
+@Path("/profile/update") // /profile/update 주소 요청 처리
+@Transactional // DB 수정 작업을 트랜잭션으로 처리
+@Consumes(MediaType.APPLICATION_FORM_URLENCODED) // 일반 form 데이터 받기
+public Response profileUpdate(
+        @FormParam("email") String email, // form의 name="email" 값 받기
+        @FormParam("phone") String phone) { // form의 name="phone" 값 받기
+
+    // ① 세션 체크
+    String loginUser = context.session().get("loginUser"); // 세션에서 로그인 사용자 아이디 가져오기
+
+    if (loginUser == null) { // 로그인 정보가 없으면
+        return Response
+                .seeOther(URI.create("/login")) // 로그인 페이지로 이동
+                .build(); // 응답 완성
+    }
+
+    // ② 이메일 중복 체크 (본인 제외)
+    User found = User.findByEmail(email); // 입력한 이메일을 사용하는 사용자가 있는지 조회
+
+    if (found != null && !found.username.equals(loginUser)) { // 이메일 사용자가 있고, 그 사용자가 본인이 아니면
+        return Response
+                .seeOther(URI.create("/profile?error=duplicate_email")) // 이메일 중복 오류와 함께 프로필 페이지로 이동
+                .build(); // 응답 완성
+    }
+
+    // ③ DB 업데이트
+    User user = User.findByUsername(loginUser); // 현재 로그인한 사용자 정보 조회
+    user.email = email; // 이메일 수정
+    user.phone = phone; // 연락처 수정
+
+    return Response
+            .seeOther(URI.create("/profile?success=updated")) // 수정 성공 메시지와 함께 프로필 페이지로 이동
+            .build(); // 응답 완성
+}
+```
+
+### 동작 방식
+
+사용자가 프로필 페이지에서 이메일과 연락처를 수정한 뒤 `수정 완료` 버튼을 누르면 `/profile/update`로 POST 요청이 전송된다.  
+서버는 먼저 세션에서 `loginUser` 값을 가져와 로그인 상태를 확인한다.  
+로그인 정보가 없으면 개인정보를 수정할 수 없으므로 `/login` 페이지로 이동시킨다.
+
+로그인 상태라면 입력한 이메일을 기준으로 `User.findByEmail(email)`을 실행하여 같은 이메일을 사용하는 사용자가 있는지 확인한다.  
+만약 해당 이메일을 가진 사용자가 있고, 그 사용자가 현재 로그인한 본인이 아니라면 이메일 중복으로 판단하여 `/profile?error=duplicate_email`로 이동한다.
+
+이메일 중복 문제가 없으면 `User.findByUsername(loginUser)`로 현재 로그인한 사용자 정보를 조회하고,  
+`user.email`과 `user.phone` 값을 새로 입력한 값으로 수정한다.  
+수정이 완료되면 `/profile?success=updated`로 이동하여 프로필 페이지에서 성공 메시지를 표시할 수 있다.
+
+---
+
+## 프로필 페이지 결과 메시지 처리
+
+아래 코드는 프로필 페이지가 로딩되었을 때 URL 파라미터를 확인하여  
+개인정보 수정 성공, 이메일 중복, 비밀번호 오류, 프로필 사진 업로드 오류 메시지를 화면에 표시하는 JavaScript 코드이다.
+
+### 기능 설명
+
+- `window.onload` : 페이지 로딩 완료 후 실행
+- `URLSearchParams` : 현재 URL의 쿼리 파라미터 읽기
+- `params.get('error')` : URL의 error 값 가져오기
+- `params.get('success')` : URL의 success 값 가져오기
+- `updateMsg` : 개인정보 수정 결과 메시지 영역
+- `success=updated` : 개인정보 수정 성공
+- `error=duplicate_email` : 이메일 중복 오류
+- `error=wrong_password` : 현재 비밀번호 불일치 오류
+- `showToast()` : Toast 알림 표시
+- `pwMsg` : 비밀번호 변경 결과 메시지 영역
+- `uploadErrorMsg` : 프로필 사진 업로드 오류 메시지 영역
+- `invalid_type` : 허용되지 않는 파일 형식
+- `too_large` : 파일 크기 초과
+- `upload_fail` : 업로드 실패
+
+### 코드
+
+```javascript
+window.onload = function() {
+    // 기존 fetch 코드 전체 유지
+
+    // URL 파라미터 오류 감지
+    const params = new URLSearchParams(window.location.search);
+    const error = params.get('error');
+    const success = params.get('success');
+
+    const msgEl = document.getElementById('updateMsg');
+
+    if (success === 'updated') {
+        msgEl.className = 'alert alert-success';
+        msgEl.textContent = ' 개인정보가 수정되었습니다.';
+    } else if (error === 'duplicate_email') {
+        msgEl.className = 'alert alert-danger';
+        msgEl.textContent = ' 이미 사용 중인 이메일입니다.';
+    }
+
+    if (error === 'wrong_password') {
+        // Toast 먼저 실행하여 즉각 알림 표시
+        showToast(' 현재 비밀번호가 일치하지 않습니다.', 'danger');
+
+        const pwMsgEl = document.getElementById('pwMsg');
+
+        if (pwMsgEl) {
+            pwMsgEl.className = 'alert alert-danger';
+            pwMsgEl.textContent = ' 현재 비밀번호가 일치하지 않습니다.';
+        }
+    }
+
+    if (error) {
+        const messages = {
+            'invalid_type': 'jpg, png, gif, webp 파일만 가능합니다.',
+            'too_large': '파일 크기는 5MB 이하여야 합니다.',
+            'upload_fail': '업로드 실패. 다시 시도해주세요.'
+        };
+
+        const msg = messages[error];
+        const div = document.getElementById('uploadErrorMsg');
+
+        if (msg && div) {
+            div.textContent = msg;
+            div.classList.remove('d-none');
+        }
+    }
+}
+```
+
+### 동작 방식
+
+프로필 페이지가 로딩되면 JavaScript는 현재 URL의 쿼리 파라미터를 확인한다.  
+URL에 `success=updated`가 있으면 개인정보 수정 성공 메시지를 `updateMsg` 영역에 표시한다.  
+URL에 `error=duplicate_email`이 있으면 이메일 중복 오류 메시지를 표시한다.
+
+비밀번호 변경 실패로 `error=wrong_password`가 전달되면 `showToast()`를 먼저 실행하여 즉시 오류 알림을 보여주고,  
+`pwMsg` 영역이 존재하면 해당 영역에도 오류 메시지를 출력한다.
+
+프로필 사진 업로드 오류는 `invalid_type`, `too_large`, `upload_fail` 값을 기준으로 처리한다.  
+각 오류 값에 맞는 메시지를 `messages` 객체에서 찾고, `uploadErrorMsg` 영역에 출력한 뒤 `d-none` 클래스를 제거하여 화면에 보이게 한다.
+
+---
+
+## 비밀번호 변경 폼 추가
+
+아래 코드는 프로필 페이지에서 사용자가 비밀번호를 변경할 수 있도록 만든 HTML 코드이다.  
+현재 비밀번호, 새 비밀번호, 새 비밀번호 확인 값을 입력받고,  
+JavaScript에서 유효성 검사와 SHA-256 해시 처리를 한 뒤 `/profile/password`로 전송한다.
+
+### 기능 설명
+
+- `pwMsg` : 비밀번호 변경 결과 메시지 표시 영역
+- `pwForm` : 비밀번호 변경 form
+- `method="POST"` : POST 방식으로 서버에 전송
+- `action="/profile/password"` : 비밀번호 변경 요청 처리 경로
+- `currentPwInput` : 사용자가 입력하는 현재 비밀번호
+- `currentPassword` : 서버로 전송할 현재 비밀번호 해시값 hidden input
+- `newPwInput` : 사용자가 입력하는 새 비밀번호
+- `newPassword` : 서버로 전송할 새 비밀번호 해시값 hidden input
+- `newPwConfirm` : 새 비밀번호 확인 입력칸
+- `invalid-feedback` : 입력값 오류 메시지 표시 영역
+- `type="button"` : 바로 submit하지 않고 JavaScript 함수 실행
+- `onclick="validateAndChangePassword()"` : 비밀번호 변경 전 유효성 검사 및 해시 처리 실행
+
+### 코드
+
+```html
+<!-- 개인정보 수정 폼 아래에 추가 -->
+<hr class="my-4">
+
+<h5 class="fw-bold mb-3"> 비밀번호 변경</h5>
+
+<!-- 결과 메시지 -->
+<div id="pwMsg" class="alert d-none mb-3"></div>
+
+<form id="pwForm"
+    method="POST"
+    action="/profile/password">
+    <div class="mb-3 text-start">
+        <label class="form-label">현재 비밀번호</label>
+        <!-- 입력용 (서버 전송 안 됨) -->
+        <input type="password" class="form-control"
+            id="currentPwInput"
+            placeholder="현재 비밀번호 입력" required>
+        <div class="invalid-feedback" id="currentPwMsg"></div>
+
+        <!-- 해시값 전송용 hidden -->
+        <input type="hidden" id="currentPassword"
+            name="currentPassword">
+    </div>
+
+    <div class="mb-3 text-start">
+        <label class="form-label">새 비밀번호</label>
+        <input type="password" class="form-control"
+            id="newPwInput"
+            placeholder="8자 이상, 영문+숫자+특수문자" required>
+        <div class="invalid-feedback" id="newPwMsg"></div>
+
+        <input type="hidden" id="newPassword"
+            name="newPassword">
+    </div>
+
+    <div class="mb-3 text-start">
+        <label class="form-label">새 비밀번호 확인</label>
+        <input type="password" class="form-control"
+            id="newPwConfirm"
+            placeholder="새 비밀번호 재입력" required>
+        <div class="invalid-feedback" id="newPwConfirmMsg"></div>
+    </div>
+
+    <button type="button"
+        class="btn btn-danger w-100"
+        onclick="validateAndChangePassword()">
+        비밀번호 변경
+    </button>
+</form>
+```
+
+### 동작 방식
+
+사용자가 프로필 페이지에서 현재 비밀번호와 새 비밀번호를 입력한 뒤 `비밀번호 변경` 버튼을 누르면 `validateAndChangePassword()` 함수가 실행된다.  
+이 함수는 새 비밀번호가 조건에 맞는지 확인하고, 새 비밀번호와 새 비밀번호 확인 값이 일치하는지 검사한다.  
+
+검사를 통과하면 현재 비밀번호와 새 비밀번호를 SHA-256 해시값으로 변환한다.  
+변환된 현재 비밀번호 해시값은 `id="currentPassword"` hidden input에 저장되고,  
+새 비밀번호 해시값은 `id="newPassword"` hidden input에 저장된다.  
+
+그 후 `id="pwForm"`인 form이 `/profile/password`로 POST 전송된다.  
+서버는 현재 비밀번호가 DB에 저장된 비밀번호와 일치하는지 확인하고, 일치하면 새 비밀번호로 변경한다.
+
+---
+
+## 비밀번호 변경 입력값 검사 및 해시 처리
+
+아래 코드는 프로필 페이지에서 비밀번호를 변경할 때 사용하는 JavaScript 코드이다.  
+사용자가 현재 비밀번호, 새 비밀번호, 새 비밀번호 확인 값을 입력하고 비밀번호 변경 버튼을 누르면,  
+입력값을 검사한 뒤 현재 비밀번호와 새 비밀번호를 SHA-256 해시값으로 변환하여 서버로 전송한다.
+
+### 기능 설명
+
+- `validateAndChangePassword()` : 비밀번호 변경 검사 및 전송 함수
+- `async` : 해시 처리처럼 시간이 걸리는 비동기 작업을 처리하기 위해 사용
+- `currentPwInput` : 사용자가 입력하는 현재 비밀번호
+- `newPwInput` : 사용자가 입력하는 새 비밀번호
+- `newPwConfirm` : 새 비밀번호 확인 입력값
+- `pwRegex` : 새 비밀번호 조건 검사 정규식
+- `showFieldError()` : 입력값 오류 표시
+- `clearFieldError()` : 오류 표시 제거
+- `hashPassword()` : 비밀번호를 SHA-256 해시값으로 변환
+- `currentPassword` : 현재 비밀번호 해시값을 서버로 전송하는 hidden input
+- `newPassword` : 새 비밀번호 해시값을 서버로 전송하는 hidden input
+- `pwForm.submit()` : 비밀번호 변경 form을 `/profile/password`로 전송
+
+### 코드
+
+```javascript
+async function validateAndChangePassword() {
+    let valid = true;
+
+    const currentPw = document.getElementById('currentPwInput').value;
+    const newPw = document.getElementById('newPwInput').value;
+    const newPwConfirm = document.getElementById('newPwConfirm').value;
+
+    // ① 현재 비밀번호 빈 값 체크
+    if (!currentPw) {
+        showFieldError('currentPwInput', 'currentPwMsg',
+                '현재 비밀번호를 입력해주세요.');
+        valid = false;
+    } else {
+        clearFieldError('currentPwInput');
+    }
+
+    // ② 새 비밀번호 정규식 검사
+    const pwRegex = /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}$/;
+
+    if (!pwRegex.test(newPw)) {
+        showFieldError('newPwInput', 'newPwMsg',
+                '8자 이상, 영문+숫자+특수문자를 포함해야 합니다.');
+        valid = false;
+    } else {
+        clearFieldError('newPwInput');
+    }
+
+    // ③ 새 비밀번호 확인 일치
+    if (newPw !== newPwConfirm) {
+        showFieldError('newPwConfirm', 'newPwConfirmMsg',
+                '새 비밀번호가 일치하지 않습니다.');
+        valid = false;
+    } else {
+        clearFieldError('newPwConfirm');
+    }
+
+    if (!valid) return;
+
+    // ④ 현재/새 비밀번호 SHA-256 해시 생성
+    const hashedCurrent = await hashPassword(currentPw);
+    const hashedNew = await hashPassword(newPw);
+
+    document.getElementById('currentPassword').value = hashedCurrent;
+    document.getElementById('newPassword').value = hashedNew;
+
+    // F12 콘솔 확인
+    console.log('현재 PW 해시 :', hashedCurrent);
+    console.log('새 PW 해시 :', hashedNew);
+
+    document.getElementById('pwForm').submit();
+}
+```
+
+### 동작 방식
+
+사용자가 비밀번호 변경 버튼을 누르면 `validateAndChangePassword()` 함수가 실행된다.  
+먼저 현재 비밀번호, 새 비밀번호, 새 비밀번호 확인 값을 가져온다.
+
+현재 비밀번호가 비어 있으면 오류 메시지를 표시한다.  
+새 비밀번호는 정규식을 사용하여 8자 이상이며 영문, 숫자, 특수문자를 포함하는지 검사한다.  
+또한 새 비밀번호와 새 비밀번호 확인 값이 같은지도 검사한다.
+
+하나라도 조건을 만족하지 못하면 `valid` 값이 `false`가 되고 함수가 종료된다.  
+모든 검사를 통과하면 현재 비밀번호와 새 비밀번호를 `hashPassword()` 함수로 SHA-256 해시값으로 변환한다.  
+변환된 해시값은 각각 `currentPassword`, `newPassword` hidden input에 저장된다.  
+마지막으로 `pwForm.submit()`을 실행하여 `/profile/password`로 비밀번호 변경 요청을 전송한다.
+
+---
+
+## 비밀번호 변경 처리
+
+아래 코드는 프로필 페이지에서 사용자가 비밀번호를 변경했을 때 서버에서 처리하는 코드이다.  
+현재 비밀번호가 DB에 저장된 비밀번호와 일치하는지 확인하고,  
+일치하면 새 비밀번호 해시값으로 DB를 업데이트한다.
+
+### 기능 설명
+
+- `@POST` : POST 요청 처리
+- `@Path("/profile/password")` : 비밀번호 변경 요청 경로 지정
+- `@Transactional` : DB 수정 작업을 트랜잭션으로 처리
+- `@Consumes(MediaType.APPLICATION_FORM_URLENCODED)` : 일반 form 데이터 수신
+- `@FormParam("currentPassword")` : 현재 비밀번호 해시값 받기
+- `@FormParam("newPassword")` : 새 비밀번호 해시값 받기
+- `context.session().get("loginUser")` : 로그인 사용자 확인
+- `User.findByUsername(loginUser)` : 현재 로그인한 사용자 정보 조회
+- `user.password.equals(currentPassword)` : 현재 비밀번호 해시값 비교
+- `user.password = newPassword` : 새 비밀번호 해시값으로 변경
+- `/profile?error=wrong_password` : 현재 비밀번호 불일치 오류
+- `/profile?success=password_changed` : 비밀번호 변경 성공
+
+### 코드
+
+```java
+@POST // POST 요청 처리
+@Path("/profile/password") // /profile/password 주소 요청 처리
+@Transactional // DB 수정 작업을 트랜잭션으로 처리
+@Consumes(MediaType.APPLICATION_FORM_URLENCODED) // 일반 form 데이터 받기
+public Response profilePassword(
+        @FormParam("currentPassword") String currentPassword, // 현재 비밀번호 해시값 받기
+        @FormParam("newPassword") String newPassword) { // 새 비밀번호 해시값 받기
+
+    // ① 세션 체크
+    String loginUser = context.session().get("loginUser"); // 세션에서 로그인 사용자 아이디 가져오기
+
+    if (loginUser == null) { // 로그인 정보가 없으면
+        return Response
+                .seeOther(URI.create("/login")) // 로그인 페이지로 이동
+                .build(); // 응답 완성
+    }
+
+    // ② 현재 비밀번호 확인 (해시값 비교)
+    User user = User.findByUsername(loginUser); // 현재 로그인한 사용자 정보 조회
+
+    if (!user.password.equals(currentPassword)) { // DB 비밀번호 해시값과 입력한 현재 비밀번호 해시값이 다르면
+        return Response
+                .seeOther(URI.create("/profile?error=wrong_password")) // 현재 비밀번호 오류와 함께 프로필 페이지로 이동
+                .build(); // 응답 완성
+    }
+
+    // ③ 새 비밀번호로 DB 업데이트
+    user.password = newPassword; // 새 비밀번호 해시값으로 변경
+
+    return Response
+            .seeOther(URI.create("/profile?success=password_changed")) // 비밀번호 변경 성공 후 프로필 페이지로 이동
+            .build(); // 응답 완성
+}
+```
+
+### 동작 방식
+
+사용자가 프로필 페이지에서 현재 비밀번호와 새 비밀번호를 입력한 뒤 비밀번호 변경 버튼을 누르면 JavaScript에서 입력값을 검사한다.  
+검사를 통과하면 현재 비밀번호와 새 비밀번호를 SHA-256 해시값으로 변환하고, hidden input에 저장한 뒤 `/profile/password`로 POST 전송한다.
+
+서버는 먼저 세션에서 `loginUser` 값을 확인하여 로그인 상태인지 검사한다.  
+로그인 정보가 없으면 `/login`으로 이동시킨다.  
+로그인 상태라면 `User.findByUsername(loginUser)`로 현재 로그인한 사용자를 조회한다.
+
+그 다음 DB에 저장된 기존 비밀번호 해시값인 `user.password`와 사용자가 입력한 현재 비밀번호 해시값인 `currentPassword`를 비교한다.  
+두 값이 다르면 현재 비밀번호가 틀린 것이므로 `/profile?error=wrong_password`로 이동한다.  
+두 값이 같으면 `user.password` 값을 `newPassword`로 바꾸어 새 비밀번호 해시값을 저장한다.  
+비밀번호 변경이 완료되면 `/profile?success=password_changed`로 이동한다.
+
+---
+
+## 로그아웃 후 이동 페이지 선택
+
+아래 코드는 로그아웃 처리 시 세션을 삭제하고,  
+URL의 `next` 파라미터 값에 따라 로그아웃 후 이동할 페이지를 다르게 설정하는 코드이다.
+
+기존에는 로그아웃 후 항상 메인 페이지 `/`로 이동했지만,  
+수정 후에는 `/logout?next=login` 형식으로 요청하면 로그아웃 후 로그인 페이지 `/login`으로 이동할 수 있다.
+
+### 기능 설명
+
+- `@GET` : GET 요청 처리
+- `@Path("/logout")` : `/logout` 경로 지정
+- `@QueryParam("next")` : URL 쿼리 파라미터 값 받기
+- `context.session().destroy()` : 현재 세션 삭제
+- `next=login` : 로그아웃 후 로그인 페이지로 이동
+- `Response.seeOther()` : 지정한 주소로 리다이렉트
+
+### 코드
+
+```java
+@GET // GET 요청 처리
+@Path("/logout") // /logout 주소 요청 처리
+public Response logout(@QueryParam("next") String next) { // URL의 next 파라미터 값 받기
+
+    context.session().destroy(); // 현재 세션 삭제, 즉 로그아웃 처리
+
+    String redirect = (next != null && next.equals("login"))
+            ? "/login" // next=login이면 로그인 페이지로 이동
+            : "/"; // next 값이 없거나 login이 아니면 메인 페이지로 이동
+
+    return Response
+            .seeOther(URI.create(redirect)) // 선택된 주소로 리다이렉트
+            .build(); // 응답 완성
+}
+```
+
+### 사용 예시
+
+```html
+<a href="/logout">로그아웃</a>
+```
+
+위 코드는 로그아웃 후 메인 페이지 `/`로 이동한다.
+
+```html
+<a href="/logout?next=login">로그아웃</a>
+```
+
+위 코드는 로그아웃 후 로그인 페이지 `/login`으로 이동한다.
+
+### 동작 방식
+
+사용자가 `/logout` 주소로 요청을 보내면 서버는 먼저 `context.session().destroy()`를 실행하여 세션을 삭제한다.  
+세션이 삭제되면 로그인 상태가 해제된다.
+
+그 다음 URL에 `next` 파라미터가 있는지 확인한다.  
+만약 `next=login`이면 `redirect` 값을 `/login`으로 설정하고,  
+그 외의 경우에는 `redirect` 값을 `/`로 설정한다.
+
+마지막으로 `Response.seeOther(URI.create(redirect)).build()`를 통해 선택된 페이지로 이동시킨다.
+
+---
+
+## 비밀번호 변경 성공 후 자동 로그아웃
+
+아래 코드는 비밀번호 변경이 성공했을 때 Toast 알림을 표시한 뒤,  
+3.5초 후 자동으로 로그아웃하고 로그인 페이지로 이동시키는 JavaScript 코드이다.
+
+### 기능 설명
+
+- `success === 'password_changed'` : 비밀번호 변경 성공 여부 확인
+- `showToast()` : 성공 Toast 알림 출력
+- `setTimeout()` : 일정 시간 후 코드 실행
+- `3500` : 3.5초 대기
+- `window.location.href` : 페이지 이동
+- `/logout?next=login` : 로그아웃 후 로그인 페이지로 이동
+
+### 코드
+
+```javascript
+// 비밀번호 변경 성공 처리, window.onload 안에 삽입
+if (success === 'password_changed') {
+    // Toast 출력
+    showToast(
+            ' 비밀번호가 변경 완료, 로그인 페이지로 이동합니다.',
+            'success'
+    );
+
+    // 3.5초 후 로그인 페이지로 이동
+    setTimeout(function() {
+        window.location.href = '/logout?next=login';
+    }, 3500);
+}
+```
+
+### 동작 방식
+
+비밀번호 변경이 성공하면 서버는 사용자를 `/profile?success=password_changed`로 이동시킨다.  
+프로필 페이지의 JavaScript는 URL에서 `success` 값을 읽고, 그 값이 `password_changed`인지 확인한다.  
+조건이 맞으면 `showToast()`를 실행하여 비밀번호 변경 성공 메시지를 보여준다.  
+그 후 `setTimeout()`을 사용해 3.5초 동안 기다린 뒤 `/logout?next=login`으로 이동한다.  
+이 주소에서는 서버가 세션을 삭제하고, `next=login` 값에 따라 로그인 페이지 `/login`으로 이동시킨다.
+
+---
+
+## Toast 컨테이너 추가
+
+아래 코드는 Bootstrap Toast 알림을 화면에 표시하기 위한 HTML 구조이다.  
+JavaScript의 `showToast()` 함수가 `liveToast`와 `toastBody` 요소를 찾아 메시지를 넣고,  
+Bootstrap Toast를 실행하여 화면 오른쪽 아래에 알림을 표시한다.
+
+### 기능 설명
+
+- `toast-container` : Toast 알림을 담는 컨테이너
+- `position-fixed` : 화면에 고정
+- `bottom-0` : 화면 아래쪽 배치
+- `end-0` : 화면 오른쪽 배치
+- `p-3` : 여백 추가
+- `z-index:9999` : 다른 요소보다 위에 표시
+- `id="liveToast"` : JavaScript에서 Toast 전체 요소를 찾기 위한 id
+- `id="toastBody"` : JavaScript에서 Toast 메시지를 넣기 위한 id
+- `bg-success` : 기본 Toast 배경색을 성공 색상으로 설정
+- `data-bs-dismiss="toast"` : 닫기 버튼 클릭 시 Toast 닫기
+
+### 코드
+
+```html
+<!-- Toast 컨테이너 추가 -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index:9999">
+    <div id="liveToast" class="toast align-items-center text-white bg-success border-0" role="alert">
+        <div class="d-flex">
+            <div class="toast-body" id="toastBody">메시지</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+```
+
+### 동작 방식
+
+HTML 문서에 이 Toast 컨테이너가 있어야 JavaScript의 `showToast()` 함수가 정상적으로 동작한다.  
+`showToast()` 함수는 `id="liveToast"`인 요소를 찾아 Bootstrap Toast 객체를 만들고,  
+`id="toastBody"`인 요소에 전달받은 메시지를 넣는다.  
+그 후 Toast가 화면 오른쪽 아래에 표시되며, 일정 시간이 지나면 자동으로 사라지거나 닫기 버튼을 눌러 직접 닫을 수 있다.
+
+### 사용 예시
+
+```javascript
+showToast('메인 페이지 로딩 완료');
+showToast('현재 비밀번호가 일치하지 않습니다.', 'danger');
+showToast('비밀번호가 변경 완료, 로그인 페이지로 이동합니다.', 'success');
+```
+
+---
+
+## 총 정리
